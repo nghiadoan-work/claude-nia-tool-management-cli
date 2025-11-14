@@ -34,15 +34,15 @@ go get github.com/stretchr/testify
 - Can run `go build` successfully
 
 ### Milestone 1.2: Core Models
-- [ ] Define all models in `pkg/models/`
-  - [ ] ToolInfo, ToolType, Registry
-  - [ ] InstalledTool, LockFile
-  - [ ] ToolMetadata
-  - [ ] SearchFilter, ListFilter
-  - [ ] Config structures
-- [ ] Write model validation methods
-- [ ] Write model tests
-- [ ] Create example JSON files for testing
+- [x] Define all models in `pkg/models/`
+  - [x] ToolInfo, ToolType, Registry
+  - [x] InstalledTool, LockFile
+  - [x] ToolMetadata
+  - [x] SearchFilter, ListFilter
+  - [x] Config structures
+- [x] Write model validation methods
+- [x] Write model tests
+- [x] Create example JSON files for testing
 
 **Deliverables**:
 - Complete `pkg/models/models.go`
