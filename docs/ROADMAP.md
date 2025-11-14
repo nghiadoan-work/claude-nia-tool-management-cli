@@ -80,12 +80,12 @@ go get github.com/stretchr/testify
 - Handles rate limiting gracefully
 
 ### Milestone 2.2: Registry Service
-- [ ] Implement RegistryService
-- [ ] Fetch and parse registry.json
-- [ ] Search tools in registry
-- [ ] Get specific cntm info
-- [ ] List tools with filtering
-- [ ] Write registry tests
+- [x] Implement RegistryService
+- [x] Fetch and parse registry.json
+- [x] Search tools in registry
+- [x] Get specific tool info
+- [x] List tools with filtering
+- [x] Write registry tests
 
 **Deliverables**:
 - `internal/services/registry.go` complete
