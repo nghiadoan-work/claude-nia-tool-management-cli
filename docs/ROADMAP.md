@@ -50,11 +50,11 @@ go get github.com/stretchr/testify
 - Example registry.json and lock file
 
 ### Milestone 1.3: Configuration Management
-- [ ] Implement ConfigService
-- [ ] Load from YAML files
-- [ ] Environment variable support
-- [ ] Config precedence logic (ENV > Project > Global > Defaults)
-- [ ] Write config tests
+- [x] Implement ConfigService
+- [x] Load from YAML files
+- [x] Environment variable support
+- [x] Config precedence logic (ENV > Project > Global > Defaults)
+- [x] Write config tests
 
 **Deliverables**:
 - `internal/config/config.go` complete
