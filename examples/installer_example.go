@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/nghiadt/claude-nia-tool-management-cli/internal/data"
 	"github.com/nghiadt/claude-nia-tool-management-cli/internal/services"
@@ -39,7 +40,7 @@ func main() {
 
 	registryService := services.NewRegistryServiceWithoutCache(githubClient)
 
-	cacheManager, err := data.NewCacheManager(filepath.Join(baseDir, ".cache"))
+	cacheManager, err := data.NewCacheManager(filepath.Join(baseDir, ".cache"), 3600*time.Second)
 	if err != nil {
 		fmt.Printf("Error creating cache manager: %v\n", err)
 		return
