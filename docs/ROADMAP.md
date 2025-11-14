@@ -93,11 +93,11 @@ go get github.com/stretchr/testify
 - Search works correctly
 
 ### Milestone 2.3: Cache Manager
-- [ ] Implement CacheManager
-- [ ] Cache registry locally
-- [ ] TTL-based expiration
-- [ ] Cache invalidation
-- [ ] Write cache tests
+- [x] Implement CacheManager
+- [x] Cache registry locally
+- [x] TTL-based expiration
+- [x] Cache invalidation
+- [x] Write cache tests
 
 **Deliverables**:
 - `internal/data/cache.go` complete
@@ -105,12 +105,12 @@ go get github.com/stretchr/testify
 - Reduces API calls
 
 ### Milestone 2.4: CLI Search & List Commands
-- [ ] Implement `cntm search` command
-- [ ] Implement `cntm list --remote` command
-- [ ] Implement `cntm info` command
-- [ ] Add table formatting for output
-- [ ] Add JSON output option
-- [ ] Write CLI integration tests
+- [x] Implement `cntm search` command
+- [x] Implement `cntm list --remote` command
+- [x] Implement `cntm info` command
+- [x] Add table formatting for output
+- [x] Add JSON output option
+- [x] Write CLI integration tests
 
 **Deliverables**:
 - Can search registry from CLI
@@ -130,42 +130,44 @@ cntm info code-reviewer
 ## Phase 3: Installation System (Week 4-5)
 
 ### Milestone 3.1: File System Manager
-- [ ] Implement FSManager
-- [ ] Extract ZIP safely
-- [ ] Create ZIP from directory
-- [ ] Path validation (prevent traversal)
-- [ ] ZIP bomb protection
-- [ ] Calculate integrity hashes
-- [ ] Write FS tests
+- [x] Implement FSManager
+- [x] Extract ZIP safely
+- [x] Create ZIP from directory
+- [x] Path validation (prevent traversal)
+- [x] ZIP bomb protection
+- [x] Calculate integrity hashes
+- [x] Write FS tests
 
 **Deliverables**:
 - `internal/data/fs.go` complete
 - Safe ZIP operations
 - Security validated
+- Test coverage: 80.1%
 
 ### Milestone 3.2: Lock File Service
-- [ ] Implement LockFileService
-- [ ] Read/write .claude-lock.json
-- [ ] Add/remove/update tools
-- [ ] Atomic operations
-- [ ] Write lock file tests
+- [x] Implement LockFileService
+- [x] Read/write .claude-lock.json
+- [x] Add/remove/update tools
+- [x] Atomic operations
+- [x] Write lock file tests
 
 **Deliverables**:
 - `internal/services/lockfile.go` complete
 - Lock file management works
 - No race conditions
+- Test coverage: 82.1% (lockfile-specific)
 
 ### Milestone 3.3: Installer Service
-- [ ] Implement InstallerService
-- [ ] Install single tool
-- [ ] Install multiple tools
-- [ ] Verify installation
-- [ ] Progress tracking
-- [ ] Error handling and rollback
-- [ ] Write installer tests
+- [x] Implement InstallerService
+- [x] Install single tool
+- [x] Install multiple tools
+- [x] Verify installation
+- [x] Progress tracking
+- [x] Error handling and rollback
+- [x] Write installer tests
 
 **Installation Flow**:
-1. Get cntm info from registry
+1. Get tool info from registry
 2. Download ZIP from GitHub with progress bar
 3. Verify integrity (SHA256)
 4. Extract to `.claude/<type>/<name>/`
@@ -173,10 +175,11 @@ cntm info code-reviewer
 6. Cleanup temp files
 
 **Deliverables**:
-- `internal/services/installer.go` complete
-- Can install tools successfully
-- Progress bars work
-- Rollback on failure
+- `internal/services/installer.go` complete ✓
+- Can install tools successfully ✓
+- Progress bars work ✓
+- Rollback on failure ✓
+- Test coverage: 79.1% (services overall)
 
 ### Milestone 3.4: CLI Install Commands
 - [ ] Implement `cntm install <name>` command

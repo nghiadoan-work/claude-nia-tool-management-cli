@@ -87,12 +87,61 @@ func createTestRegistry() *models.Registry {
 	}
 }
 
+// mockCacheManager is a mock implementation of CacheManager for testing
+type mockCacheManager struct {
+	getRegistryFunc func() (*models.Registry, error)
+	setRegistryFunc func(registry *models.Registry) error
+	isValidFunc     func() bool
+	invalidateFunc  func() error
+}
+
+func (m *mockCacheManager) GetRegistry() (*models.Registry, error) {
+	if m.getRegistryFunc != nil {
+		return m.getRegistryFunc()
+	}
+	return nil, nil
+}
+
+func (m *mockCacheManager) SetRegistry(registry *models.Registry) error {
+	if m.setRegistryFunc != nil {
+		return m.setRegistryFunc(registry)
+	}
+	return nil
+}
+
+func (m *mockCacheManager) IsValid() bool {
+	if m.isValidFunc != nil {
+		return m.isValidFunc()
+	}
+	return false
+}
+
+func (m *mockCacheManager) Invalidate() error {
+	if m.invalidateFunc != nil {
+		return m.invalidateFunc()
+	}
+	return nil
+}
+
 func TestNewRegistryService(t *testing.T) {
 	mockClient := &mockGitHubClient{}
-	service := NewRegistryService(mockClient)
 
-	assert.NotNil(t, service)
-	assert.Nil(t, service.registry)
+	t.Run("with cache", func(t *testing.T) {
+		mockCache := &mockCacheManager{}
+		service := NewRegistryService(mockClient, mockCache)
+
+		assert.NotNil(t, service)
+		assert.Nil(t, service.registry)
+		assert.True(t, service.useCache)
+	})
+
+	t.Run("without cache", func(t *testing.T) {
+		service := NewRegistryServiceWithoutCache(mockClient)
+
+		assert.NotNil(t, service)
+		assert.Nil(t, service.registry)
+		assert.False(t, service.useCache)
+	})
 }
 
 func TestFetchRegistry_Success(t *testing.T) {
@@ -107,7 +156,7 @@ func TestFetchRegistry_Success(t *testing.T) {
 		},
 	}
 
-	service := NewRegistryService(mockClient)
+	service := NewRegistryServiceWithoutCache(mockClient)
 
 	result, err := service.FetchRegistry()
 	require.NoError(t, err)
@@ -115,7 +164,7 @@ func TestFetchRegistry_Success(t *testing.T) {
 	assert.Equal(t, "1.0", result.Version)
 	assert.Len(t, result.Tools, 3)
 
-	// Verify it's cached
+	// Verify it's cached in memory
 	assert.NotNil(t, service.registry)
 }
 
@@ -126,7 +175,7 @@ func TestFetchRegistry_InvalidJSON(t *testing.T) {
 		},
 	}
 
-	service := NewRegistryService(mockClient)
+	service := NewRegistryServiceWithoutCache(mockClient)
 
 	_, err := service.FetchRegistry()
 	assert.Error(t, err)
@@ -145,7 +194,7 @@ func TestGetRegistry_CachedVsFetch(t *testing.T) {
 		},
 	}
 
-	service := NewRegistryService(mockClient)
+	service := NewRegistryServiceWithoutCache(mockClient)
 
 	// First call should fetch
 	result1, err := service.GetRegistry()
@@ -175,7 +224,7 @@ func TestRefreshRegistry(t *testing.T) {
 		},
 	}
 
-	service := NewRegistryService(mockClient)
+	service := NewRegistryServiceWithoutCache(mockClient)
 
 	// Initial fetch
 	_, err := service.GetRegistry()
@@ -198,7 +247,7 @@ func TestGetTool(t *testing.T) {
 		},
 	}
 
-	service := NewRegistryService(mockClient)
+	service := NewRegistryServiceWithoutCache(mockClient)
 
 	tests := []struct {
 		name     string
@@ -237,7 +286,7 @@ func TestSearchTools(t *testing.T) {
 		},
 	}
 
-	service := NewRegistryService(mockClient)
+	service := NewRegistryServiceWithoutCache(mockClient)
 
 	tests := []struct {
 		name        string
@@ -324,7 +373,7 @@ func TestListTools(t *testing.T) {
 		},
 	}
 
-	service := NewRegistryService(mockClient)
+	service := NewRegistryServiceWithoutCache(mockClient)
 
 	tests := []struct {
 		name      string
@@ -398,7 +447,7 @@ func TestGetToolsByType(t *testing.T) {
 		},
 	}
 
-	service := NewRegistryService(mockClient)
+	service := NewRegistryServiceWithoutCache(mockClient)
 
 	tests := []struct {
 		name      string
@@ -474,5 +523,165 @@ func TestSortTools(t *testing.T) {
 		assert.Equal(t, 200, toolsCopy[0].Downloads)
 		assert.Equal(t, 100, toolsCopy[1].Downloads)
 		assert.Equal(t, 50, toolsCopy[2].Downloads)
+	})
+}
+
+// Cache integration tests
+
+func TestRegistryService_WithCache_FetchAndCache(t *testing.T) {
+	registry := createTestRegistry()
+	registryJSON, _ := json.Marshal(registry)
+
+	mockClient := &mockGitHubClient{
+		fetchFileFunc: func(path string) ([]byte, error) {
+			return registryJSON, nil
+		},
+	}
+
+	setCacheCalled := false
+	mockCache := &mockCacheManager{
+		setRegistryFunc: func(r *models.Registry) error {
+			setCacheCalled = true
+			assert.NotNil(t, r)
+			assert.Equal(t, "1.0", r.Version)
+			return nil
+		},
+		isValidFunc: func() bool {
+			return false // Cache not valid initially
+		},
+	}
+
+	service := NewRegistryService(mockClient, mockCache)
+
+	// Fetch registry
+	result, err := service.FetchRegistry()
+	require.NoError(t, err)
+	assert.NotNil(t, result)
+
+	// Verify cache was set
+	assert.True(t, setCacheCalled)
+}
+
+func TestRegistryService_WithCache_GetFromCache(t *testing.T) {
+	registry := createTestRegistry()
+
+	fetchCalled := false
+	mockClient := &mockGitHubClient{
+		fetchFileFunc: func(path string) ([]byte, error) {
+			fetchCalled = true
+			return nil, nil
+		},
+	}
+
+	mockCache := &mockCacheManager{
+		getRegistryFunc: func() (*models.Registry, error) {
+			return registry, nil
+		},
+		isValidFunc: func() bool {
+			return true // Cache is valid
+		},
+	}
+
+	service := NewRegistryService(mockClient, mockCache)
+
+	// Get registry (should use cache)
+	result, err := service.GetRegistry()
+	require.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, "1.0", result.Version)
+
+	// Verify GitHub was not called
+	assert.False(t, fetchCalled)
+}
+
+func TestRegistryService_WithCache_CacheInvalidFallbackToGitHub(t *testing.T) {
+	registry := createTestRegistry()
+	registryJSON, _ := json.Marshal(registry)
+
+	fetchCalled := false
+	mockClient := &mockGitHubClient{
+		fetchFileFunc: func(path string) ([]byte, error) {
+			fetchCalled = true
+			return registryJSON, nil
+		},
+	}
+
+	mockCache := &mockCacheManager{
+		getRegistryFunc: func() (*models.Registry, error) {
+			// Simulate cache read failure
+			return nil, assert.AnError
+		},
+		isValidFunc: func() bool {
+			return true // Cache claims to be valid but read fails
+		},
+		setRegistryFunc: func(r *models.Registry) error {
+			return nil
+		},
+	}
+
+	service := NewRegistryService(mockClient, mockCache)
+
+	// Get registry (should fall back to GitHub)
+	result, err := service.GetRegistry()
+	require.NoError(t, err)
+	assert.NotNil(t, result)
+
+	// Verify GitHub was called
+	assert.True(t, fetchCalled)
+}
+
+func TestRegistryService_RefreshRegistry_InvalidatesCache(t *testing.T) {
+	registry := createTestRegistry()
+	registryJSON, _ := json.Marshal(registry)
+
+	mockClient := &mockGitHubClient{
+		fetchFileFunc: func(path string) ([]byte, error) {
+			return registryJSON, nil
+		},
+	}
+
+	invalidateCalled := false
+	mockCache := &mockCacheManager{
+		invalidateFunc: func() error {
+			invalidateCalled = true
+			return nil
+		},
+		setRegistryFunc: func(r *models.Registry) error {
+			return nil
+		},
+	}
+
+	service := NewRegistryService(mockClient, mockCache)
+
+	// Refresh registry
+	_, err := service.RefreshRegistry()
+	require.NoError(t, err)
+
+	// Verify cache was invalidated
+	assert.True(t, invalidateCalled)
+}
+
+func TestRegistryService_InvalidateCache(t *testing.T) {
+	mockClient := &mockGitHubClient{}
+
+	t.Run("with cache manager", func(t *testing.T) {
+		invalidateCalled := false
+		mockCache := &mockCacheManager{
+			invalidateFunc: func() error {
+				invalidateCalled = true
+				return nil
+			},
+		}
+
+		service := NewRegistryService(mockClient, mockCache)
+		err := service.InvalidateCache()
+		require.NoError(t, err)
+		assert.True(t, invalidateCalled)
+	})
+
+	t.Run("without cache manager", func(t *testing.T) {
+		service := NewRegistryServiceWithoutCache(mockClient)
+		err := service.InvalidateCache()
+		require.NoError(t, err) // Should not error
 	})
 }

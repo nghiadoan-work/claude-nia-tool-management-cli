@@ -14,16 +14,37 @@ type GitHubClientInterface interface {
 	FetchFile(path string) ([]byte, error)
 }
 
+// CacheManagerInterface defines the methods needed from CacheManager
+type CacheManagerInterface interface {
+	GetRegistry() (*models.Registry, error)
+	SetRegistry(registry *models.Registry) error
+	IsValid() bool
+	Invalidate() error
+}
+
 // RegistryService manages tool registry operations
 type RegistryService struct {
 	githubClient GitHubClientInterface
+	cacheManager CacheManagerInterface
 	registry     *models.Registry
+	useCache     bool
 }
 
-// NewRegistryService creates a new RegistryService
-func NewRegistryService(githubClient GitHubClientInterface) *RegistryService {
+// NewRegistryService creates a new RegistryService with cache support
+func NewRegistryService(githubClient GitHubClientInterface, cacheManager CacheManagerInterface) *RegistryService {
 	return &RegistryService{
 		githubClient: githubClient,
+		cacheManager: cacheManager,
+		useCache:     cacheManager != nil,
+	}
+}
+
+// NewRegistryServiceWithoutCache creates a new RegistryService without cache support
+func NewRegistryServiceWithoutCache(githubClient GitHubClientInterface) *RegistryService {
+	return &RegistryService{
+		githubClient: githubClient,
+		cacheManager: nil,
+		useCache:     false,
 	}
 }
 
@@ -46,24 +67,63 @@ func (rs *RegistryService) FetchRegistry() (*models.Registry, error) {
 		return nil, fmt.Errorf("invalid registry: %w", err)
 	}
 
-	// Cache the registry
+	// Cache the registry in memory
 	rs.registry = &registry
+
+	// Cache to disk if cache manager is available
+	if rs.useCache && rs.cacheManager != nil {
+		if err := rs.cacheManager.SetRegistry(&registry); err != nil {
+			// Log warning but don't fail - cache is not critical
+			// In production, this would use a proper logger
+			_ = err
+		}
+	}
 
 	return &registry, nil
 }
 
 // GetRegistry returns the cached registry or fetches it if not available
 func (rs *RegistryService) GetRegistry() (*models.Registry, error) {
-	if rs.registry == nil {
-		return rs.FetchRegistry()
+	// First check in-memory cache
+	if rs.registry != nil {
+		return rs.registry, nil
 	}
-	return rs.registry, nil
+
+	// Then check disk cache if available
+	if rs.useCache && rs.cacheManager != nil && rs.cacheManager.IsValid() {
+		registry, err := rs.cacheManager.GetRegistry()
+		if err == nil {
+			// Update in-memory cache
+			rs.registry = registry
+			return registry, nil
+		}
+		// If cache read fails, continue to fetch from GitHub
+	}
+
+	// No cache available or cache invalid, fetch from GitHub
+	return rs.FetchRegistry()
 }
 
 // RefreshRegistry forces a refresh of the registry from GitHub
 func (rs *RegistryService) RefreshRegistry() (*models.Registry, error) {
+	// Invalidate disk cache if available
+	if rs.useCache && rs.cacheManager != nil {
+		_ = rs.cacheManager.Invalidate() // Ignore errors
+	}
+
+	// Clear in-memory cache
 	rs.registry = nil
+
+	// Fetch fresh data from GitHub
 	return rs.FetchRegistry()
+}
+
+// InvalidateCache invalidates the disk cache
+func (rs *RegistryService) InvalidateCache() error {
+	if rs.useCache && rs.cacheManager != nil {
+		return rs.cacheManager.Invalidate()
+	}
+	return nil
 }
 
 // GetTool finds a specific tool by name and type
