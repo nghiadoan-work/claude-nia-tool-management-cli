@@ -3,12 +3,15 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/nghiadt/claude-nia-tool-management-cli/internal/config"
 	"github.com/nghiadt/claude-nia-tool-management-cli/internal/data"
 	"github.com/nghiadt/claude-nia-tool-management-cli/internal/services"
 	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/models"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -27,20 +30,21 @@ var (
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List tools from the registry",
-	Long: `List tools from the remote registry with optional filtering and sorting.
+	Short: "List installed tools or tools from the registry",
+	Long: `List locally installed tools or tools from the remote registry.
 
-By default, this command lists all available tools in the registry.
-You can filter by type, tags, author, and apply sorting.
+By default, this command lists locally installed tools.
+Use --remote to list all available tools in the registry.
 
 Examples:
+  cntm list                               # List locally installed tools
+  cntm list --json                        # List local tools in JSON format
   cntm list --remote                      # List all remote tools
   cntm list --remote --type agent         # List only agents
   cntm list --remote --tag git            # List tools with "git" tag
   cntm list --remote --sort-by downloads  # Sort by download count
   cntm list --remote --sort-desc          # Sort in descending order
-  cntm list --remote --limit 10           # Limit to 10 results
-  cntm list --remote --json               # Output in JSON format`,
+  cntm list --remote --limit 10           # Limit to 10 results`,
 	RunE: runList,
 }
 
@@ -60,9 +64,45 @@ func init() {
 
 func runList(cmd *cobra.Command, args []string) error {
 	if !listRemote {
-		return fmt.Errorf("currently only --remote listing is supported\nHint: Use 'cntm list --remote' to list tools from the registry")
+		// List locally installed tools
+		return runListLocal()
 	}
 
+	// List remote tools from registry
+	return runListRemote()
+}
+
+// runListLocal lists locally installed tools
+func runListLocal() error {
+	// Load lock file service
+	lockFilePath := filepath.Join(basePath, ".claude-lock.json")
+	lockFileService, err := services.NewLockFileService(lockFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to create lock file service: %w", err)
+	}
+
+	// Get installed tools
+	tools, err := lockFileService.ListTools()
+	if err != nil {
+		return fmt.Errorf("failed to list installed tools: %w\nHint: No tools installed yet? Use 'cntm install <name>' to install tools", err)
+	}
+
+	if len(tools) == 0 {
+		fmt.Println("No tools installed yet.")
+		fmt.Println("Use 'cntm install <name>' to install tools from the registry.")
+		return nil
+	}
+
+	// Display results
+	if listJSON {
+		return outputJSON(tools)
+	}
+
+	return displayInstalledTools(tools)
+}
+
+// runListRemote lists tools from the remote registry
+func runListRemote() error {
 	// Load config
 	cfg, err := config.LoadConfig(cfgFile)
 	if err != nil {
@@ -140,4 +180,56 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	return displayToolsTable(results)
+}
+
+// displayInstalledTools displays locally installed tools in a table format
+func displayInstalledTools(tools map[string]*models.InstalledTool) error {
+	if len(tools) == 0 {
+		fmt.Println("No tools installed yet.")
+		return nil
+	}
+
+	// Convert map to sorted slice for consistent ordering
+	type toolEntry struct {
+		name string
+		tool *models.InstalledTool
+	}
+	var entries []toolEntry
+	for name, tool := range tools {
+		entries = append(entries, toolEntry{name: name, tool: tool})
+	}
+
+	// Sort by name
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].name < entries[j].name
+	})
+
+	// Prepare table data
+	headers := []string{"Name", "Version", "Type", "Installed At"}
+	var rows [][]string
+
+	for _, entry := range entries {
+		rows = append(rows, []string{
+			entry.name,
+			entry.tool.Version,
+			string(entry.tool.Type),
+			entry.tool.InstalledAt.Format("2006-01-02 15:04:05"),
+		})
+	}
+
+	// Create table with new API
+	table := tablewriter.NewTable(os.Stdout,
+		tablewriter.WithHeader(headers),
+	)
+
+	// Add rows
+	for _, row := range rows {
+		table.Append(row)
+	}
+
+	// Render table
+	table.Render()
+	fmt.Printf("\n%d tool(s) installed\n", len(tools))
+
+	return nil
 }

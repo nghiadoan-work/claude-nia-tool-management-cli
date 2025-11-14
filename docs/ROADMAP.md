@@ -182,17 +182,23 @@ cntm info code-reviewer
 - Test coverage: 79.1% (services overall)
 
 ### Milestone 3.4: CLI Install Commands
-- [ ] Implement `cntm install <name>` command
-- [ ] Support version pinning (`name@version`)
-- [ ] Support multiple installs
-- [ ] Add `--path` flag for custom directory
-- [ ] Add `--force` flag for reinstall
-- [ ] Write CLI integration tests
+- [x] Implement `cntm install <name>` command
+- [x] Support version pinning (`name@version`)
+- [x] Support multiple installs
+- [x] Add `--path` flag for custom directory
+- [x] Add `--force` flag for reinstall
+- [x] Write CLI integration tests
+- [x] Enhanced `cntm list` to show local installations
 
 **Deliverables**:
-- Install command fully working
-- Can install from real GitHub registry
-- Good UX with progress indication
+- `cmd/install.go` complete ✓
+- `cmd/list.go` enhanced for local listing ✓
+- Install command fully working ✓
+- Can install from real GitHub registry ✓
+- Good UX with progress indication ✓
+- Already-installed detection ✓
+- Multiple tool installation support ✓
+- Test coverage: 100% for parseToolArg function
 
 **Phase 3 Demo**:
 ```bash
