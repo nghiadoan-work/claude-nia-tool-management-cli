@@ -11,11 +11,11 @@ Build a package manager CLI for Claude Code tools with GitHub registry backend. 
 ## Phase 1: Foundation & Core Models (Week 1)
 
 ### Milestone 1.1: Project Setup
-- [ ] Initialize Go module
-- [ ] Install dependencies (cobra, go-github, etc.)
-- [ ] Set up project structure
-- [ ] Configure testing framework
-- [ ] Set up GitHub test repository
+- [x] Initialize Go module
+- [x] Install dependencies (cobra, go-github, etc.)
+- [x] Set up project structure
+- [x] Configure testing framework
+- [ ] Set up GitHub test repository (deferred - external setup)
 
 **Dependencies**:
 ```bash
