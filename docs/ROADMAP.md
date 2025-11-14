@@ -66,13 +66,13 @@ go get github.com/stretchr/testify
 ## Phase 2: GitHub Integration & Registry (Week 2-3)
 
 ### Milestone 2.1: GitHub Client
-- [ ] Implement GitHubClient service
-- [ ] Fetch file from repo
-- [ ] Download large files with progress
-- [ ] Authentication with PAT
-- [ ] Rate limit handling
-- [ ] Retry logic with backoff
-- [ ] Write GitHub client tests (mocked)
+- [x] Implement GitHubClient service
+- [x] Fetch file from repo
+- [x] Download large files with progress
+- [x] Authentication with PAT
+- [x] Rate limit handling
+- [x] Retry logic with backoff
+- [x] Write GitHub client tests (mocked)
 
 **Deliverables**:
 - `internal/services/github.go` complete
