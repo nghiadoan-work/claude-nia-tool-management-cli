@@ -1,4 +1,4 @@
-# Architecture Document - Claude Code Package Manager
+# Architecture Document - Claude Nia Tool Management CLI (cntm)
 
 ## System Architecture
 
@@ -44,7 +44,7 @@
 - `root.go`: Root command and global configuration
 - `search.go`: Search registry for tools
 - `list.go`: List installed/available tools
-- `info.go`: Show tool information
+- `info.go`: Show cntm information
 - `install.go`: Install tools from registry
 - `update.go`: Update installed tools
 - `remove.go`: Remove installed tools
@@ -75,7 +75,7 @@ type RegistryService interface {
     // Search registry for tools
     Search(query string, filter *SearchFilter) ([]*ToolInfo, error)
 
-    // Get specific tool info from registry
+    // Get specific cntm info from registry
     GetToolInfo(name string, toolType ToolType) (*ToolInfo, error)
 
     // List all tools in registry
@@ -117,7 +117,7 @@ const (
 #### 2.2 Installer Service
 
 ```go
-// InstallerService handles tool installation
+// InstallerService handles cntm installation
 type InstallerService interface {
     // Install a tool from registry
     Install(name string, version string) error
@@ -140,7 +140,7 @@ type Installation struct {
 }
 
 // Installation process:
-// 1. Fetch tool info from registry
+// 1. Fetch cntm info from registry
 // 2. Download ZIP from GitHub
 // 3. Verify integrity (checksum)
 // 4. Extract to .claude/<type>/<name>/
@@ -151,7 +151,7 @@ type Installation struct {
 #### 2.3 Publisher Service
 
 ```go
-// PublisherService handles tool publishing
+// PublisherService handles cntm publishing
 type PublisherService interface {
     // Publish a tool to registry
     Publish(name string, opts *PublishOptions) (*PublishResult, error)
@@ -205,7 +205,7 @@ type ToolMetadata struct {
 #### 2.4 Updater Service
 
 ```go
-// UpdaterService handles tool updates
+// UpdaterService handles cntm updates
 type UpdaterService interface {
     // Check for outdated tools
     CheckOutdated() ([]*OutdatedTool, error)
@@ -255,10 +255,10 @@ type LockFileService interface {
     // Remove tool from lock file
     RemoveTool(name string) error
 
-    // Update tool version in lock file
+    // Update cntm version in lock file
     UpdateTool(name string, version string) error
 
-    // Get installed tool info
+    // Get installed cntm info
     GetTool(name string) (*InstalledTool, error)
 }
 
@@ -448,7 +448,7 @@ type PublishConfig struct {
 ### Example 1: Installing a Tool
 
 ```
-User: tool install code-reviewer
+User: cntm install code-reviewer
 
 1. CLI (cmd/install.go)
    └─> Parse arguments
@@ -469,7 +469,7 @@ User: tool install code-reviewer
 ### Example 2: Publishing a Tool
 
 ```
-User: tool publish my-agent --version 1.0.0
+User: cntm publish my-agent --version 1.0.0
 
 1. CLI (cmd/publish.go)
    └─> Parse arguments
@@ -494,7 +494,7 @@ User: tool publish my-agent --version 1.0.0
 ### Example 3: Checking for Updates
 
 ```
-User: tool outdated
+User: cntm outdated
 
 1. CLI (cmd/outdated.go)
    └─> Call UpdaterService.CheckOutdated()
@@ -618,7 +618,7 @@ type CLIError struct {
 ## Project Structure
 
 ```
-agent_skill_cli_go/
+claude-nia-tool-management-cli/
 ├── cmd/
 │   ├── root.go
 │   ├── search.go

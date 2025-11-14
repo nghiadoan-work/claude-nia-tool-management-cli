@@ -37,8 +37,8 @@ go version
 ### 1. Initialize Go Module
 
 ```bash
-cd agent_skill_cli_go
-go mod init github.com/yourusername/claude-tools-cli
+cd claude-nia-tool-management-cli
+go mod init github.com/yourusername/claude-nia-tool-management-cli
 ```
 
 Replace `yourusername` with your actual GitHub username or organization.
@@ -107,7 +107,7 @@ go install github.com/spf13/cobra-cli@latest
 cat > main.go << 'EOF'
 package main
 
-import "github.com/yourusername/claude-tools-cli/cmd"
+import "github.com/yourusername/claude-nia-tool-management-cli/cmd"
 
 func main() {
     cmd.Execute()
@@ -119,10 +119,10 @@ EOF
 
 ```bash
 # Build the project
-go build -o tool
+go build -o cntm
 
 # Test the CLI
-./tool --help
+./cntm --help
 
 # Run tests
 go test ./...
@@ -131,7 +131,7 @@ go test ./...
 ## Project Structure After Setup
 
 ```
-agent_skill_cli_go/
+claude-nia-tool-management-cli/
 ├── cmd/
 │   ├── root.go
 │   ├── agent.go
@@ -203,12 +203,12 @@ go tool cover -html=coverage.out
 
 ```bash
 # Build
-go build -o tool
+go build -o cntm
 
 # Test commands
-./tool agent list
-./tool agent add test-agent
-./tool agent get test-agent
+./cntm agent list
+./cntm agent add test-agent
+./cntm agent get test-agent
 ```
 
 ### 4. Use Air for Hot Reload (Optional)
@@ -229,7 +229,7 @@ tmp_dir = "tmp"
 
 [build]
 cmd = "go build -o ./tmp/tool ."
-bin = "tmp/tool"
+bin = "tmp/cntm"
 include_ext = ["go"]
 exclude_dir = ["tmp", "vendor"]
 ```
@@ -320,7 +320,7 @@ dlv test ./internal/repository
 - Ensure go.mod exists with correct module path
 
 ### "permission denied"
-- Make the binary executable: `chmod +x tool`
+- Make the binary executable: `chmod +x cntm`
 
 ### Import path issues
 - Update import paths in all files to match your module name

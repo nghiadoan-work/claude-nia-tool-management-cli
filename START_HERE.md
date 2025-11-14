@@ -1,6 +1,9 @@
-# START HERE - Project Overview
+# START HERE - Claude Nia Tool Management CLI (cntm)
 
 ## What This Project Is
+
+**Project Name:** `claude-nia-tool-management-cli`
+**CLI Command:** `cntm`
 
 This is a **Package Manager for Claude Code Tools** - think npm/pip for Claude agents, commands, and skills.
 
@@ -17,20 +20,20 @@ Like this:
 
 ```bash
 # Search for tools in remote registry
-tool search "code review"
+cntm search "code review"
 
 # Install from registry (downloads ZIP, extracts to .claude/)
-tool install code-reviewer
+cntm install code-reviewer
 
 # Check for updates
-tool outdated
+cntm outdated
 
 # Update to latest
-tool update code-reviewer
+cntm update code-reviewer
 
 # Create and publish your own
-tool create agent my-agent
-tool publish my-agent
+cntm create agent my-agent
+cntm publish my-agent
 ```
 
 ## Document Map
@@ -93,7 +96,7 @@ github.com/yourusername/claude-tools-registry/
 ### Installation Flow
 
 ```
-1. User runs: tool install code-reviewer
+1. User runs: cntm install code-reviewer
 
 2. CLI fetches registry.json from GitHub
 
@@ -111,11 +114,11 @@ github.com/yourusername/claude-tools-registry/
 ### Publishing Flow
 
 ```
-1. User creates tool: tool create agent my-agent
+1. User creates tool: cntm create agent my-agent
 
 2. User develops tool in .claude/agents/my-agent/
 
-3. User publishes: tool publish my-agent
+3. User publishes: cntm publish my-agent
 
 4. CLI zips the tool directory
 
@@ -140,7 +143,7 @@ brew install go  # macOS
 cd /Volumes/ex-macmini-a/claude_projects/agent_skill_cli_go
 
 # Initialize Go module
-go mod init github.com/yourusername/claude-tools-cli
+go mod init github.com/yourusername/claude-nia-tool-management-cli
 
 # Install dependencies
 go get github.com/spf13/cobra@latest
@@ -198,13 +201,13 @@ Follow the roadmap in **[docs/ROADMAP.md](docs/ROADMAP.md)**:
 
 | Command | Description |
 |---------|-------------|
-| `tool search <query>` | Search remote registry |
-| `tool install <name>` | Download and install tool |
-| `tool update <name>` | Update to latest version |
-| `tool publish <name>` | Publish your tool |
-| `tool list` | Show installed tools |
-| `tool list --remote` | Show available tools |
-| `tool outdated` | Check for updates |
+| `cntm search <query>` | Search remote registry |
+| `cntm install <name>` | Download and install tool |
+| `cntm update <name>` | Update to latest version |
+| `cntm publish <name>` | Publish your tool |
+| `cntm list` | Show installed tools |
+| `cntm list --remote` | Show available tools |
+| `cntm outdated` | Check for updates |
 
 ### Files Created
 
@@ -248,7 +251,7 @@ Common questions answered:
 A: Remote: GitHub registry repo. Local: `.claude/` directory.
 
 **Q: How do I share a tool?**
-A: Run `tool publish my-tool` - creates PR to registry.
+A: Run `cntm publish my-tool` - creates PR to registry.
 
 **Q: Can I use private repos?**
 A: Yes! Just configure your GitHub token.

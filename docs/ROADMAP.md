@@ -1,7 +1,10 @@
-# Implementation Roadmap - Claude Code Package Manager
+# Implementation Roadmap - Claude Nia Tool Management CLI (cntm)
 
 ## Overview
 Build a package manager CLI for Claude Code tools with GitHub registry backend. Estimated total time: 8-10 weeks.
+
+**Project:** `claude-nia-tool-management-cli`
+**CLI Command:** `cntm`
 
 ---
 
@@ -80,7 +83,7 @@ go get github.com/stretchr/testify
 - [ ] Implement RegistryService
 - [ ] Fetch and parse registry.json
 - [ ] Search tools in registry
-- [ ] Get specific tool info
+- [ ] Get specific cntm info
 - [ ] List tools with filtering
 - [ ] Write registry tests
 
@@ -102,9 +105,9 @@ go get github.com/stretchr/testify
 - Reduces API calls
 
 ### Milestone 2.4: CLI Search & List Commands
-- [ ] Implement `tool search` command
-- [ ] Implement `tool list --remote` command
-- [ ] Implement `tool info` command
+- [ ] Implement `cntm search` command
+- [ ] Implement `cntm list --remote` command
+- [ ] Implement `cntm info` command
 - [ ] Add table formatting for output
 - [ ] Add JSON output option
 - [ ] Write CLI integration tests
@@ -117,9 +120,9 @@ go get github.com/stretchr/testify
 
 **Phase 2 Demo**:
 ```bash
-tool search code-review
-tool list --remote --type agent
-tool info code-reviewer
+cntm search code-review
+cntm list --remote --type agent
+cntm info code-reviewer
 ```
 
 ---
@@ -162,7 +165,7 @@ tool info code-reviewer
 - [ ] Write installer tests
 
 **Installation Flow**:
-1. Get tool info from registry
+1. Get cntm info from registry
 2. Download ZIP from GitHub with progress bar
 3. Verify integrity (SHA256)
 4. Extract to `.claude/<type>/<name>/`
@@ -176,7 +179,7 @@ tool info code-reviewer
 - Rollback on failure
 
 ### Milestone 3.4: CLI Install Commands
-- [ ] Implement `tool install <name>` command
+- [ ] Implement `cntm install <name>` command
 - [ ] Support version pinning (`name@version`)
 - [ ] Support multiple installs
 - [ ] Add `--path` flag for custom directory
@@ -190,10 +193,10 @@ tool info code-reviewer
 
 **Phase 3 Demo**:
 ```bash
-tool install code-reviewer
-tool install git-helper@1.0.0
-tool install agent1 agent2 agent3
-tool list  # show installed tools
+cntm install code-reviewer
+cntm install git-helper@1.0.0
+cntm install agent1 agent2 agent3
+cntm list  # show installed tools
 ```
 
 ---
@@ -214,9 +217,9 @@ tool list  # show installed tools
 - Can update tools
 
 ### Milestone 4.2: CLI Update Commands
-- [ ] Implement `tool outdated` command
-- [ ] Implement `tool update <name>` command
-- [ ] Implement `tool update --all` command
+- [ ] Implement `cntm outdated` command
+- [ ] Implement `cntm update <name>` command
+- [ ] Implement `cntm update --all` command
 - [ ] Show changelog/changes summary
 - [ ] Add confirmation prompts
 - [ ] Write CLI integration tests
@@ -228,9 +231,9 @@ tool list  # show installed tools
 
 **Phase 4 Demo**:
 ```bash
-tool outdated
-tool update code-reviewer
-tool update --all
+cntm outdated
+cntm update code-reviewer
+cntm update --all
 ```
 
 ---
@@ -272,13 +275,13 @@ tool update --all
 - [ ] Write create tests
 
 **Deliverables**:
-- `tool create` command working
+- `cntm create` command working
 - Can create agent/command/skill locally
 - Good interactive experience
 
 ### Milestone 5.4: CLI Publish Commands
-- [ ] Implement `tool create <type> <name>` command
-- [ ] Implement `tool publish <name>` command
+- [ ] Implement `cntm create <type> <name>` command
+- [ ] Implement `cntm publish <name>` command
 - [ ] Version bumping logic
 - [ ] Changelog prompts
 - [ ] Add `--force` flag
@@ -291,8 +294,8 @@ tool update --all
 
 **Phase 5 Demo**:
 ```bash
-tool create agent my-agent
-tool publish my-agent --version 1.0.0
+cntm create agent my-agent
+cntm publish my-agent --version 1.0.0
 # Creates PR to registry
 ```
 
@@ -336,10 +339,10 @@ tool publish my-agent --version 1.0.0
 
 **Phase 6 Demo**:
 ```bash
-tool init
-tool browse --sort downloads
-tool trending
-tool remove old-agent
+cntm init
+cntm browse --sort downloads
+cntm trending
+cntm remove old-agent
 ```
 
 ---
@@ -551,8 +554,8 @@ tests/integration/
 
    # Clone and setup
    git clone <repo>
-   cd agent_skill_cli_go
-   go mod init github.com/yourusername/claude-tools-cli
+   cd claude-nia-tool-management-cli
+   go mod init github.com/yourusername/claude-nia-tool-management-cli
    ```
 
 2. **Create GitHub test registry**:

@@ -1,4 +1,7 @@
-# Claude Code Package Manager - Requirements Document
+# Claude Nia Tool Management CLI - Requirements Document
+
+**Project:** `claude-nia-tool-management-cli`
+**CLI Command:** `cntm`
 
 ## Project Overview
 A CLI package manager for Claude Code tools (agents, commands, and skills) that pulls from and pushes to a GitHub repository, similar to npm for Node.js packages.
@@ -100,23 +103,23 @@ claude-tools-registry/                    (GitHub repo)
 **Commands**:
 ```bash
 # Search remote registry
-tool search <query>
-tool search --type agent "code review"
+cntm search <query>
+cntm search --type agent "code review"
 
 # List available tools in registry
-tool list --remote
-tool list --remote --type command
+cntm list --remote
+cntm list --remote --type command
 
 # Install a tool from registry
-tool install <name>
-tool install code-reviewer
-tool install code-reviewer@1.1.0              # specific version
+cntm install <name>
+cntm install code-reviewer
+cntm install code-reviewer@1.1.0              # specific version
 
 # Install multiple tools
-tool install code-reviewer git-helper api-integration
+cntm install code-reviewer git-helper api-integration
 
-# Show tool information before installing
-tool info <name>
+# Show cntm information before installing
+cntm info <name>
 ```
 
 **Process**:
@@ -131,17 +134,17 @@ tool info <name>
 **Commands**:
 ```bash
 # Check for updates
-tool outdated
+cntm outdated
 
 # Update specific tool
-tool update <name>
-tool update code-reviewer
+cntm update <name>
+cntm update code-reviewer
 
 # Update all tools
-tool update --all
+cntm update --all
 
 # Update to specific version
-tool update code-reviewer@1.2.0
+cntm update code-reviewer@1.2.0
 ```
 
 **Process**:
@@ -155,15 +158,15 @@ tool update code-reviewer@1.2.0
 **Commands**:
 ```bash
 # Create new tool locally (interactive)
-tool create agent my-agent
-tool create command my-command --template basic
+cntm create agent my-agent
+cntm create command my-command --template basic
 
 # Publish to registry
-tool publish my-agent
-tool publish my-agent --version 1.0.0 --message "Initial release"
+cntm publish my-agent
+cntm publish my-agent --version 1.0.0 --message "Initial release"
 
 # Update existing published tool
-tool publish my-agent --version 1.1.0 --message "Bug fixes"
+cntm publish my-agent --version 1.1.0 --message "Bug fixes"
 ```
 
 **Process**:
@@ -179,18 +182,18 @@ tool publish my-agent --version 1.1.0 --message "Bug fixes"
 **Commands**:
 ```bash
 # List installed tools
-tool list
-tool list --type agent
+cntm list
+cntm list --type agent
 
 # Show installed tool details
 tool show <name>
 
 # Remove installed tool
-tool remove <name>
-tool uninstall <name>
+cntm remove <name>
+cntm uninstall <name>
 
 # Verify tool integrity
-tool verify <name>
+cntm verify <name>
 ```
 
 ### 2.6 Browse & Discovery
@@ -198,16 +201,16 @@ tool verify <name>
 **Commands**:
 ```bash
 # Browse popular tools
-tool browse
-tool browse --sort downloads
-tool browse --sort recent
+cntm browse
+cntm browse --sort downloads
+cntm browse --sort recent
 
 # Search by tags
-tool search --tag code-review
-tool search --tag testing --type agent
+cntm search --tag code-review
+cntm search --tag testing --type agent
 
 # Show trending tools
-tool trending
+cntm trending
 ```
 
 ## 3. Lock File (.claude-lock.json)
@@ -302,7 +305,7 @@ Commands:
   search <query>              Search registry for tools
   list                        List installed tools
   list --remote               List available tools in registry
-  info <name>                 Show tool information
+  info <name>                 Show cntm information
   install <name>              Install tool from registry
   update <name>               Update tool to latest version
   update --all                Update all tools
@@ -391,7 +394,7 @@ Global Flags:
 
 ### 10.1 Installation Experience
 ```bash
-$ tool install code-reviewer
+$ cntm install code-reviewer
 Fetching registry from GitHub...
 Found: code-reviewer v1.2.0
 Downloading... ████████████████ 100% (15.4 KB)
@@ -401,14 +404,14 @@ Extracting to .claude/agents/code-reviewer/
 
 ### 10.2 Publishing Experience
 ```bash
-$ tool create agent my-agent
+$ cntm create agent my-agent
 Creating new agent: my-agent
 ? Description: My custom agent
 ? Author: john@example.com
 ? Tags (comma-separated): automation, custom
 ✓ Created .claude/agents/my-agent/
 
-$ tool publish my-agent
+$ cntm publish my-agent
 Preparing my-agent for publication...
 Creating ZIP archive...
 Generating metadata...
@@ -421,14 +424,14 @@ Your tool will be available after PR approval!
 
 ### 10.3 Update Experience
 ```bash
-$ tool outdated
+$ cntm outdated
 Checking for updates...
 
 Package         Current    Latest
 code-reviewer   1.1.0      1.2.0
 git-helper      2.0.0      2.0.1
 
-$ tool update --all
+$ cntm update --all
 Updating 2 tools...
 Updating code-reviewer... ✓ 1.1.0 → 1.2.0
 Updating git-helper... ✓ 2.0.0 → 2.0.1
