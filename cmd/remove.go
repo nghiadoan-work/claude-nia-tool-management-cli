@@ -7,6 +7,7 @@ import (
 
 	"github.com/nghiadt/claude-nia-tool-management-cli/internal/data"
 	"github.com/nghiadt/claude-nia-tool-management-cli/internal/services"
+	"github.com/nghiadt/claude-nia-tool-management-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -77,18 +78,18 @@ func runRemove(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no valid tools to remove\nHint: Use 'cntm list' to see installed tools")
 	}
 
-	// Show what will be removed
-	fmt.Println("The following tools will be removed:")
-	for _, toolName := range toolsToRemove {
-		tool := installedTools[toolName]
-		fmt.Printf("  - %s@%s (%s)\n", toolName, tool.Version, tool.Type)
-	}
-	fmt.Println()
-
 	// Confirmation prompt (unless --yes)
 	if !removeYes {
-		if !promptConfirmation("Are you sure you want to remove these tools?") {
-			fmt.Println("Removal cancelled")
+		var confirmed bool
+		if len(toolsToRemove) == 1 {
+			confirmed = ui.Confirm(fmt.Sprintf("Are you sure you want to remove %s?",
+				ui.FormatToolName(toolsToRemove[0])))
+		} else {
+			confirmed = ui.ConfirmBulkOperation("remove", toolsToRemove)
+		}
+
+		if !confirmed {
+			ui.PrintWarning("Operation cancelled")
 			return nil
 		}
 		fmt.Println()
@@ -106,33 +107,41 @@ func runRemove(cmd *cobra.Command, args []string) error {
 
 		// Remove tool directory from file system
 		if err := fsManager.RemoveDir(toolDir); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to remove directory for %s: %v\n", toolName, err)
+			ui.PrintError("Failed to remove directory for %s", ui.FormatToolName(toolName))
 			failCount++
 			continue
 		}
 
 		// Remove tool from lock file
 		if err := lockFileService.RemoveTool(toolName); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to update lock file for %s: %v\n", toolName, err)
-			fmt.Fprintf(os.Stderr, "Warning: Directory was removed but lock file not updated\n")
+			ui.PrintError("Failed to update lock file for %s", ui.FormatToolName(toolName))
+			ui.PrintWarning("Directory was removed but lock file not updated")
 			failCount++
 			continue
 		}
 
-		fmt.Printf("Successfully removed %s@%s\n", toolName, tool.Version)
+		ui.PrintSuccess("Removed %s (version %s)", ui.FormatToolName(toolName), ui.FormatVersion(tool.Version))
 		successCount++
 	}
 
 	// Display summary for multiple tools
 	if len(toolsToRemove) > 1 {
+		ui.PrintHeader("Removal Summary")
+		if successCount > 0 {
+			ui.PrintSuccess("%d tool(s) removed", successCount)
+		}
+		if failCount > 0 {
+			ui.PrintError("%d tool(s) failed to remove", failCount)
+		}
 		fmt.Println()
-		fmt.Println("---")
-		fmt.Printf("Summary: %d removed, %d failed\n", successCount, failCount)
 	}
 
 	// Return error if any removals failed
 	if failCount > 0 {
-		return fmt.Errorf("%d tool(s) failed to remove", failCount)
+		return ui.NewValidationError(
+			fmt.Sprintf("Failed to remove %d tool(s)", failCount),
+			"Check the errors above for details",
+		)
 	}
 
 	return nil

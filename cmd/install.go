@@ -10,6 +10,7 @@ import (
 	"github.com/nghiadt/claude-nia-tool-management-cli/internal/config"
 	"github.com/nghiadt/claude-nia-tool-management-cli/internal/data"
 	"github.com/nghiadt/claude-nia-tool-management-cli/internal/services"
+	"github.com/nghiadt/claude-nia-tool-management-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -53,7 +54,10 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	// Load config
 	cfg, err := config.LoadConfig(cfgFile)
 	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
+		return ui.NewValidationError(
+			"Failed to load configuration",
+			"Run 'cntm init' to initialize the project or check your config file",
+		)
 	}
 
 	// Determine base path for installation
@@ -70,7 +74,10 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	// Parse GitHub URL to get owner and repo
 	owner, repo, err := parseGitHubURL(cfg.Registry.URL)
 	if err != nil {
-		return fmt.Errorf("invalid registry URL: %w", err)
+		return ui.NewValidationError(
+			"Invalid registry URL in configuration",
+			fmt.Sprintf("Check the registry URL in your config: %s", ui.FormatURL(cfg.Registry.URL)),
+		)
 	}
 
 	// Initialize services
@@ -137,8 +144,10 @@ func runInstall(cmd *cobra.Command, args []string) error {
 				if err == nil {
 					// If no version specified or version matches, skip
 					if spec.version == "" || spec.version == installedVersion {
-						fmt.Printf("Tool %s@%s is already installed, skipping\n", spec.name, installedVersion)
-						fmt.Println("Use --force to reinstall")
+						ui.PrintWarning("Tool %s is already installed (version %s)",
+							ui.FormatToolName(spec.name),
+							ui.FormatVersion(installedVersion))
+						ui.PrintHint("Use --force to reinstall")
 						fmt.Println()
 						skipCount++
 						continue
@@ -149,14 +158,21 @@ func runInstall(cmd *cobra.Command, args []string) error {
 
 		// Install the tool
 		var err error
+		displayName := spec.name
 		if spec.version != "" {
+			displayName = spec.name + "@" + spec.version
 			err = installer.InstallWithVersion(spec.name, spec.version)
 		} else {
 			err = installer.Install(spec.name)
 		}
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to install %s: %v\n", spec.name, err)
+			ui.PrintError("Failed to install %s", ui.FormatToolName(displayName))
+			if strings.Contains(err.Error(), "not found") {
+				ui.PrintHint("Run 'cntm search %s' to find similar tools", spec.name)
+			} else if strings.Contains(err.Error(), "network") || strings.Contains(err.Error(), "connection") {
+				ui.PrintHint("Check your internet connection and try again")
+			}
 			fmt.Fprintln(os.Stderr)
 			failCount++
 			continue
@@ -168,13 +184,25 @@ func runInstall(cmd *cobra.Command, args []string) error {
 
 	// Display summary for multiple tools
 	if len(toolsToInstall) > 1 {
-		fmt.Println("---")
-		fmt.Printf("Summary: %d installed, %d skipped, %d failed\n", successCount, skipCount, failCount)
+		ui.PrintHeader("Installation Summary")
+		if successCount > 0 {
+			ui.PrintSuccess("%d tool(s) installed", successCount)
+		}
+		if skipCount > 0 {
+			ui.PrintWarning("%d tool(s) skipped (already installed)", skipCount)
+		}
+		if failCount > 0 {
+			ui.PrintError("%d tool(s) failed to install", failCount)
+		}
+		fmt.Println()
 	}
 
 	// Return error if any installations failed
 	if failCount > 0 {
-		return fmt.Errorf("%d tool(s) failed to install", failCount)
+		return ui.NewValidationError(
+			fmt.Sprintf("%d tool(s) failed to install", failCount),
+			"Check the errors above for details",
+		)
 	}
 
 	return nil

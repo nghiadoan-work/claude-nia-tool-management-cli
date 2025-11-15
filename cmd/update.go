@@ -1,16 +1,14 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/nghiadt/claude-nia-tool-management-cli/internal/config"
 	"github.com/nghiadt/claude-nia-tool-management-cli/internal/data"
 	"github.com/nghiadt/claude-nia-tool-management-cli/internal/services"
+	"github.com/nghiadt/claude-nia-tool-management-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -138,26 +136,33 @@ func runUpdateSingle(updater *services.UpdaterService, toolName string) error {
 	}
 
 	if !outdated {
-		fmt.Printf("Tool %s is already up-to-date\n", toolName)
+		ui.PrintInfo("Tool %s is already up-to-date", ui.FormatToolName(toolName))
 		return nil
 	}
 
 	// Get current and latest version for confirmation
 	installedTool, err := updater.GetInstalledVersion(toolName)
 	if err != nil {
-		return fmt.Errorf("failed to get installed version: %w", err)
+		return ui.NewValidationError(
+			fmt.Sprintf("Failed to get installed version for %s", ui.FormatToolName(toolName)),
+			"Ensure the tool is properly installed",
+		)
 	}
 
 	latestVersion, err := updater.GetLatestVersion(toolName)
 	if err != nil {
-		return fmt.Errorf("failed to get latest version: %w", err)
+		return ui.NewNetworkError("fetching latest version", err)
 	}
 
 	// Confirmation prompt (unless --yes)
 	if !updateYes {
-		fmt.Printf("Updating %s from %s to %s\n", toolName, installedTool, latestVersion)
-		if !promptConfirmation("Are you sure?") {
-			fmt.Println("Update cancelled")
+		ui.PrintInfo("Updating %s from %s to %s",
+			ui.FormatToolName(toolName),
+			ui.FormatVersion(installedTool),
+			ui.FormatVersion(latestVersion))
+
+		if !ui.Confirm("Are you sure you want to continue?") {
+			ui.PrintWarning("Update cancelled")
 			return nil
 		}
 	}
@@ -165,13 +170,15 @@ func runUpdateSingle(updater *services.UpdaterService, toolName string) error {
 	// Perform update
 	result, err := updater.Update(toolName)
 	if err != nil {
-		return fmt.Errorf("update failed: %w", err)
+		ui.PrintError("Update failed for %s", ui.FormatToolName(toolName))
+		ui.PrintHint("Try running 'cntm install --force %s' to force reinstall", toolName)
+		return err
 	}
 
 	if result.Skipped {
-		fmt.Printf("Tool %s is %s\n", toolName, result.Message)
+		ui.PrintInfo("Tool %s is %s", ui.FormatToolName(toolName), result.Message)
 	} else {
-		fmt.Printf("Successfully %s\n", result.Message)
+		ui.PrintSuccess("%s", result.Message)
 	}
 
 	return nil
@@ -180,28 +187,35 @@ func runUpdateSingle(updater *services.UpdaterService, toolName string) error {
 // runUpdateAll updates all outdated tools
 func runUpdateAll(updater *services.UpdaterService) error {
 	// Check for outdated tools
-	fmt.Println("Checking for outdated tools...")
+	sp := ui.NewSpinner("Checking for outdated tools...")
+	sp.Start()
+
 	outdated, err := updater.CheckOutdated()
+	sp.Stop()
+
 	if err != nil {
-		return fmt.Errorf("failed to check for updates: %w", err)
+		return ui.NewNetworkError("checking for updates", err)
 	}
 
 	if len(outdated) == 0 {
-		fmt.Println("All tools are up-to-date!")
+		ui.PrintSuccess("All tools are up-to-date!")
 		return nil
 	}
 
 	// Display outdated tools
-	fmt.Printf("Found %d outdated tool(s):\n", len(outdated))
+	ui.PrintInfo("Found %d outdated tool(s):", len(outdated))
 	for _, tool := range outdated {
-		fmt.Printf("  - %s: %s → %s\n", tool.Name, tool.CurrentVersion, tool.LatestVersion)
+		fmt.Printf("  - %s: %s → %s\n",
+			ui.FormatToolName(tool.Name),
+			ui.FormatVersion(tool.CurrentVersion),
+			ui.FormatVersion(tool.LatestVersion))
 	}
 	fmt.Println()
 
 	// Confirmation prompt (unless --yes)
 	if !updateYes {
-		if !promptConfirmation("Update all tools?") {
-			fmt.Println("Update cancelled")
+		if !ui.Confirm("Update all tools?") {
+			ui.PrintWarning("Update cancelled")
 			return nil
 		}
 		fmt.Println()
@@ -218,41 +232,38 @@ func runUpdateAll(updater *services.UpdaterService) error {
 	for _, result := range results {
 		if result.Success {
 			if result.Skipped {
-				fmt.Printf("%s: %s\n", result.ToolName, result.Message)
+				ui.PrintInfo("%s: %s", ui.FormatToolName(result.ToolName), result.Message)
 				skipCount++
 			} else {
-				fmt.Printf("Successfully %s\n", result.Message)
+				ui.PrintSuccess("%s", result.Message)
 				successCount++
 			}
 		} else {
-			fmt.Fprintf(os.Stderr, "Failed to update %s: %v\n", result.ToolName, result.Error)
+			ui.PrintError("Failed to update %s", ui.FormatToolName(result.ToolName))
 			failCount++
 		}
 		fmt.Println()
 	}
 
 	// Summary
-	fmt.Println("---")
-	fmt.Printf("Summary: %d updated, %d skipped, %d failed\n", successCount, skipCount, failCount)
+	ui.PrintHeader("Update Summary")
+	if successCount > 0 {
+		ui.PrintSuccess("%d tool(s) updated", successCount)
+	}
+	if skipCount > 0 {
+		ui.PrintInfo("%d tool(s) skipped (already up-to-date)", skipCount)
+	}
+	if failCount > 0 {
+		ui.PrintError("%d tool(s) failed to update", failCount)
+	}
 
 	// Return error if any updates failed
 	if len(errors) > 0 {
-		return fmt.Errorf("%d tool(s) failed to update", len(errors))
+		return ui.NewValidationError(
+			fmt.Sprintf("%d tool(s) failed to update", len(errors)),
+			"Check the errors above for details",
+		)
 	}
 
 	return nil
-}
-
-// promptConfirmation prompts the user for a yes/no confirmation
-func promptConfirmation(message string) bool {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("%s [y/N]: ", message)
-
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		return false
-	}
-
-	response = strings.ToLower(strings.TrimSpace(response))
-	return response == "y" || response == "yes"
 }

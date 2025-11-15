@@ -36,25 +36,5 @@ func TestUpdateCmd(t *testing.T) {
 	}
 }
 
-func TestPromptConfirmation(t *testing.T) {
-	// This is a helper function, so we just test it exists
-	// In a real scenario, we'd use a mock reader
-	tests := []struct {
-		name     string
-		message  string
-		// We can't easily test stdin in unit tests without mocking
-	}{
-		{
-			name:    "basic message",
-			message: "Are you sure?",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Just ensure the function exists and can be called
-			// In production, we'd use dependency injection for the reader
-			assert.NotNil(t, promptConfirmation)
-		})
-	}
-}
+// TestPromptConfirmation is no longer needed as we use ui.Confirm
+// which is tested in internal/ui/prompts_test.go
