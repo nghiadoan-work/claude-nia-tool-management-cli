@@ -440,31 +440,32 @@ cntm remove --yes agent1 agent2  # Remove multiple without confirmation
 ## Phase 8: Release (Week 11)
 
 ### Milestone 8.1: Release Preparation
-- [ ] Version tagging (v1.0.0)
-- [ ] Release notes
-- [ ] Build for multiple platforms
-- [ ] Create install scripts
-- [ ] GitHub release
+- [x] Version tagging (v1.0.0) - version package created
+- [x] Release notes - CHANGELOG.md created
+- [x] Build for multiple platforms - build.sh script created
+- [x] Create install scripts - install.sh and install.ps1 created
+- [ ] GitHub release - ready for manual creation
 
 **Platforms**:
-- macOS (amd64, arm64)
-- Linux (amd64, arm64)
-- Windows (amd64)
+- macOS (amd64, arm64) ✓
+- Linux (amd64, arm64) ✓
+- Windows (amd64) ✓
 
 **Deliverables**:
-- Binary releases for all platforms
-- Installation instructions
-- Release announcement
+- Binary releases for all platforms ✓
+- Installation instructions ✓
+- Release announcement ✓ (docs/RELEASE.md)
 
 ### Milestone 8.2: Distribution
-- [ ] Homebrew formula (optional)
-- [ ] Install script (curl | bash)
-- [ ] Docker image (optional)
-- [ ] AUR package (optional)
+- [ ] Homebrew formula (planned for v1.1)
+- [x] Install script (curl | bash)
+- [ ] Docker image (planned for v1.2)
+- [ ] AUR package (planned for v1.2)
 
 **Deliverables**:
-- Easy installation methods
-- Wide platform support
+- Easy installation methods ✓
+- Wide platform support ✓
+- Distribution documentation ✓ (docs/DISTRIBUTION.md)
 
 ---
 

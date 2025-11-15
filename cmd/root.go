@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/version"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +31,7 @@ Example usage:
   cntm install code-reviewer    # Install a tool
   cntm update --all             # Update all tools
   cntm publish my-agent         # Publish your tool`,
-	Version: "0.1.0",
+	Version: version.Version,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

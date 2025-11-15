@@ -17,15 +17,51 @@ This tool helps you:
 
 ### Installation
 
+#### Quick Install (Recommended)
+
+**Unix/Linux/macOS:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/yourusername/claude-nia-tool-management-cli/main/scripts/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+iwr -useb https://raw.githubusercontent.com/yourusername/claude-nia-tool-management-cli/main/scripts/install.ps1 | iex
+```
+
+#### Download Pre-built Binary
+
+Download the latest release for your platform from [Releases](https://github.com/yourusername/claude-nia-tool-management-cli/releases):
+
+- **macOS (Intel)**: `cntm-1.0.0-darwin-amd64.tar.gz`
+- **macOS (Apple Silicon)**: `cntm-1.0.0-darwin-arm64.tar.gz`
+- **Linux (x64)**: `cntm-1.0.0-linux-amd64.tar.gz`
+- **Linux (ARM64)**: `cntm-1.0.0-linux-arm64.tar.gz`
+- **Windows (x64)**: `cntm-1.0.0-windows-amd64.zip`
+
+Extract and move to your PATH:
+```bash
+# Unix/Linux/macOS
+tar -xzf cntm-*.tar.gz
+sudo mv cntm-* /usr/local/bin/cntm
+chmod +x /usr/local/bin/cntm
+```
+
+#### Build from Source
+
 ```bash
 # Clone and build
-git clone <repo-url>
+git clone https://github.com/yourusername/claude-nia-tool-management-cli.git
 cd claude-nia-tool-management-cli
 go build -o cntm
 
-# Optional: Install globally
-go install
+# Verify installation
+./cntm version
 ```
+
+Requirements:
+- Go 1.21 or later
+- Git
 
 ### Basic Usage
 

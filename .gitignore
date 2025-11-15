@@ -1,0 +1,45 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Build output
+cntm
+dist/
+
+# Config files (may contain tokens)
+.claude-tools-config.yaml
+*.local.yaml
+
+# Test data
+.claude/
+.claude-lock.json
+
+# Temporary files
+*.tmp
+tmp/
