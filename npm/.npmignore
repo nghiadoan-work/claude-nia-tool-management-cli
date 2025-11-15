@@ -1,0 +1,12 @@
+# Don't publish these to npm
+tmp/
+*.log
+.DS_Store
+node_modules/
+
+# Keep these
+!bin/
+!install.js
+!index.js
+!package.json
+!README.md
