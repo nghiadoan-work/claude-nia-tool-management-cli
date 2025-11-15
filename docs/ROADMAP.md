@@ -319,45 +319,57 @@ cntm publish my-agent --version 1.0.0
 ## Phase 6: Enhanced Features (Week 9)
 
 ### Milestone 6.1: Browse & Discovery
-- [ ] Implement browse command
-- [ ] Trending tools logic
-- [ ] Sort by downloads/recent
-- [ ] Tag-based filtering
-- [ ] Nice UI for browsing
-- [ ] Write browse tests
+- [x] Implement browse command
+- [x] Trending tools logic
+- [x] Sort by downloads/recent
+- [x] Tag-based filtering
+- [x] Nice UI for browsing
+- [x] Write browse tests
 
 **Deliverables**:
-- Browse command working
-- Good discovery experience
+- `cmd/browse.go` complete ✓
+- `cmd/browse_test.go` complete ✓
+- Browse command working ✓
+- Trending command (alias) working ✓
+- Good discovery experience with relative time formatting ✓
 
 ### Milestone 6.2: Remove Tool
-- [ ] Implement remove/uninstall command
-- [ ] Confirmation prompts
-- [ ] Update lock file
-- [ ] Clean removal
-- [ ] Write remove tests
+- [x] Implement remove/uninstall command
+- [x] Confirmation prompts
+- [x] Update lock file
+- [x] Clean removal
+- [x] Write remove tests
 
 **Deliverables**:
-- Remove command working
-- Safe deletion
+- `cmd/remove.go` complete ✓
+- `cmd/remove_test.go` complete ✓
+- Remove command working ✓
+- Aliases: uninstall, rm ✓
+- Safe deletion with confirmation ✓
 
 ### Milestone 6.3: Init Command
-- [ ] Implement init command
-- [ ] Create .claude directory structure
-- [ ] Initialize lock file
-- [ ] Set up config
-- [ ] Write init tests
+- [x] Implement init command
+- [x] Create .claude directory structure
+- [x] Initialize lock file
+- [x] Set up config
+- [x] Write init tests
 
 **Deliverables**:
-- Init command working
-- Easy project setup
+- `cmd/init.go` complete ✓
+- `cmd/init_test.go` complete ✓
+- Init command working ✓
+- Easy project setup ✓
+- Directory structure creation ✓
 
 **Phase 6 Demo**:
 ```bash
-cntm init
-cntm browse --sort downloads
-cntm trending
-cntm remove old-agent
+cntm init                        # Initialize project
+cntm browse --sort downloads     # Browse tools sorted by downloads
+cntm browse --sort updated       # Browse recently updated tools
+cntm trending                    # Show top 10 trending tools
+cntm trending --limit 20         # Show top 20 trending tools
+cntm remove old-agent            # Remove with confirmation
+cntm remove --yes agent1 agent2  # Remove multiple without confirmation
 ```
 
 ---
