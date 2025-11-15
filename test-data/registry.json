@@ -1,0 +1,103 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2024-11-14T12:00:00Z",
+  "tools": {
+    "agent": [
+      {
+        "name": "code-reviewer",
+        "version": "1.0.0",
+        "description": "Automated code review agent that analyzes pull requests and provides feedback on code quality, style, and potential issues",
+        "type": "agent",
+        "author": "Claude Team",
+        "tags": ["code-review", "quality", "automation", "pr"],
+        "file": "agents/code-reviewer.zip",
+        "size": 2048576,
+        "downloads": 1542,
+        "created_at": "2024-09-15T10:00:00Z",
+        "updated_at": "2024-11-10T15:30:00Z"
+      },
+      {
+        "name": "git-helper",
+        "version": "1.2.0",
+        "description": "Git workflow helper that automates common git operations and provides guidance on best practices",
+        "type": "agent",
+        "author": "Community",
+        "tags": ["git", "workflow", "automation"],
+        "file": "agents/git-helper.zip",
+        "size": 1048576,
+        "downloads": 987,
+        "created_at": "2024-08-01T08:00:00Z",
+        "updated_at": "2024-10-20T12:00:00Z"
+      },
+      {
+        "name": "test-generator",
+        "version": "2.0.1",
+        "description": "Generates unit tests automatically based on your code structure and functions",
+        "type": "agent",
+        "author": "Testing Team",
+        "tags": ["testing", "automation", "tdd"],
+        "file": "agents/test-generator.zip",
+        "size": 3145728,
+        "downloads": 2341,
+        "created_at": "2024-07-15T09:00:00Z",
+        "updated_at": "2024-11-12T16:45:00Z"
+      }
+    ],
+    "command": [
+      {
+        "name": "test-coverage",
+        "version": "1.0.0",
+        "description": "Run tests with detailed coverage reports and analysis",
+        "type": "command",
+        "author": "Testing Team",
+        "tags": ["testing", "coverage", "ci"],
+        "file": "commands/test-coverage.zip",
+        "size": 524288,
+        "downloads": 3456,
+        "created_at": "2024-08-20T11:00:00Z",
+        "updated_at": "2024-11-05T10:15:00Z"
+      },
+      {
+        "name": "deploy-preview",
+        "version": "1.5.2",
+        "description": "Deploy preview environments for pull requests",
+        "type": "command",
+        "author": "DevOps Team",
+        "tags": ["deployment", "preview", "ci-cd"],
+        "file": "commands/deploy-preview.zip",
+        "size": 1572864,
+        "downloads": 1876,
+        "created_at": "2024-06-10T14:00:00Z",
+        "updated_at": "2024-11-01T09:30:00Z"
+      }
+    ],
+    "skill": [
+      {
+        "name": "github-api",
+        "version": "1.0.0",
+        "description": "GitHub API patterns and best practices for working with repositories",
+        "type": "skill",
+        "author": "API Team",
+        "tags": ["github", "api", "patterns"],
+        "file": "skills/github-api.zip",
+        "size": 819200,
+        "downloads": 2134,
+        "created_at": "2024-07-25T13:00:00Z",
+        "updated_at": "2024-10-28T14:20:00Z"
+      },
+      {
+        "name": "docker-best-practices",
+        "version": "2.1.0",
+        "description": "Docker and containerization best practices and optimization techniques",
+        "type": "skill",
+        "author": "DevOps Team",
+        "tags": ["docker", "containers", "best-practices"],
+        "file": "skills/docker-best-practices.zip",
+        "size": 1048576,
+        "downloads": 3021,
+        "created_at": "2024-05-30T10:00:00Z",
+        "updated_at": "2024-11-08T11:00:00Z"
+      }
+    ]
+  }
+}
