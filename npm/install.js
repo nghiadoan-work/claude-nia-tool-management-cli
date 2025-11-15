@@ -13,7 +13,7 @@ const { execSync } = require('child_process');
 // Package info
 const PACKAGE_NAME = 'cntm';
 const VERSION = require('./package.json').version;
-const GITHUB_REPO = 'nghiadt/claude-nia-tool-management-cli';
+const GITHUB_REPO = 'nghiadoan-work/claude-nia-tool-management-cli';
 
 // Platform detection
 const PLATFORM_MAP = {
