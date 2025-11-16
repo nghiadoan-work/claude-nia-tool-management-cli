@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A package manager for Claude Code tools (agents, commands, and skills)",
   "bin": {
-    "cntm": "./cntm"
+    "cntm": "./bin/cntm"
   },
   "scripts": {
     "postinstall": "node scripts/install.js"

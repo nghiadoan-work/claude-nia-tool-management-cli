@@ -1,4 +1,4 @@
-# Ignore build artifacts
+# Ignore build artifacts (but not bin/ directory)
 cntm
 cntm.exe
 *.o
@@ -26,3 +26,4 @@ examples/
 !internal/
 !pkg/
 !scripts/
+!bin/
