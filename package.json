@@ -1,0 +1,27 @@
+{
+  "name": "@nghiadoan-work/cntm",
+  "version": "1.0.0",
+  "description": "A package manager for Claude Code tools (agents, commands, and skills)",
+  "bin": {
+    "cntm": "./cntm"
+  },
+  "scripts": {
+    "postinstall": "node scripts/install.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nghiadoan-work/claude-nia-tool-management-cli.git"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "package-manager",
+    "cli",
+    "tools"
+  ],
+  "author": "Nghia Doan",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
