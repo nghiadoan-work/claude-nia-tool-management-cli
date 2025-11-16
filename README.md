@@ -14,6 +14,27 @@ npx github:nghiadoan-work/claude-nia-tool-management-cli search "code review"
 npx github:nghiadoan-work/claude-nia-tool-management-cli install code-reviewer
 ```
 
+**Create a shortcut alias** to avoid typing the long command:
+
+For **zsh** (macOS default):
+```bash
+echo 'alias cntm="npx github:nghiadoan-work/claude-nia-tool-management-cli"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+For **bash**:
+```bash
+echo 'alias cntm="npx github:nghiadoan-work/claude-nia-tool-management-cli"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+After setting up the alias, you can use it like:
+```bash
+cntm init
+cntm search "code review"
+cntm install code-reviewer
+```
+
 ### Install via npm
 
 Install globally from the repository:
