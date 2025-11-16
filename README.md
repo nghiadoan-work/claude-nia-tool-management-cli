@@ -4,31 +4,29 @@ A package manager for Claude Code tools (agents, commands, and skills). Like npm
 
 ## Installation
 
-### Install via npm (Recommended)
+### Using npx (No Installation Required) ⭐ Recommended
 
-Download the latest release and install globally:
+Run cntm directly from GitHub without installing:
 
 ```bash
-# Download the latest release tarball from GitHub
-# Then install it
-npm install -g ./nghiadoan-work-cntm-1.0.0.tgz
-
-# Verify installation
-cntm --version
+npx github:nghiadoan-work/claude-nia-tool-management-cli init
+npx github:nghiadoan-work/claude-nia-tool-management-cli search "code review"
+npx github:nghiadoan-work/claude-nia-tool-management-cli install code-reviewer
 ```
 
-### Install from Source
+### Install via npm
 
-Clone and install from the repository:
+Install globally from the repository:
 
 ```bash
 git clone https://github.com/nghiadoan-work/claude-nia-tool-management-cli.git
 cd claude-nia-tool-management-cli
 npm install -g .
 
-# Or just build with Go
-go build -o cntm
-./cntm --version
+# Then use directly
+cntm init
+cntm search "code review"
+cntm install code-reviewer
 ```
 
 ### Build from Source (Go Only)
@@ -41,8 +39,6 @@ cd claude-nia-tool-management-cli
 go build -o cntm
 ./cntm --version
 ```
-
-After installation, the `cntm` command will be available globally.
 
 ## Quick Start
 
