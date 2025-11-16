@@ -57,7 +57,7 @@ func runVersion(cmd *cobra.Command, args []string) error {
 	case "text":
 		fallthrough
 	default:
-		ui.PrintSuccess(info.LongString())
+		ui.PrintSuccess("%s", info.LongString())
 	}
 
 	return nil

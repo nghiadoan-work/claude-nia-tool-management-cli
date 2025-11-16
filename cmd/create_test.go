@@ -78,30 +78,13 @@ func TestCreateAgentFile(t *testing.T) {
 	assert.Contains(t, string(content), "Capabilities")
 }
 
-func TestCreateCommandFile(t *testing.T) {
-	tempDir := t.TempDir()
-	toolPath := filepath.Join(tempDir, "test-command")
-	require.NoError(t, os.MkdirAll(toolPath, 0755))
-
-	err := createCommandFile(toolPath, "test-command")
-	assert.NoError(t, err)
-
-	commandPath := filepath.Join(toolPath, "command.md")
-	assert.FileExists(t, commandPath)
-
-	content, err := os.ReadFile(commandPath)
-	require.NoError(t, err)
-	assert.Contains(t, string(content), "test-command")
-	assert.Contains(t, string(content), "Syntax")
-	assert.Contains(t, string(content), "Examples")
-}
 
 func TestCreateSkillFile(t *testing.T) {
 	tempDir := t.TempDir()
 	toolPath := filepath.Join(tempDir, "test-skill")
 	require.NoError(t, os.MkdirAll(toolPath, 0755))
 
-	err := createSkillFile(toolPath, "test-skill")
+	err := createSkillFile(toolPath, "test-skill", "test description")
 	assert.NoError(t, err)
 
 	skillPath := filepath.Join(toolPath, "SKILL.md")
@@ -118,24 +101,28 @@ func TestCreateTypeSpecificFiles(t *testing.T) {
 	tempDir := t.TempDir()
 
 	tests := []struct {
-		name         string
-		toolType     models.ToolType
-		expectedFile string
+		name           string
+		toolType       models.ToolType
+		expectedFile   string
+		shouldHaveFile bool
 	}{
 		{
-			name:         "agent",
-			toolType:     models.ToolTypeAgent,
-			expectedFile: "agent.md",
+			name:           "agent",
+			toolType:       models.ToolTypeAgent,
+			expectedFile:   "agent.md",
+			shouldHaveFile: true,
 		},
 		{
-			name:         "command",
-			toolType:     models.ToolTypeCommand,
-			expectedFile: "command.md",
+			name:           "command",
+			toolType:       models.ToolTypeCommand,
+			expectedFile:   "", // Commands don't create any files
+			shouldHaveFile: false,
 		},
 		{
-			name:         "skill",
-			toolType:     models.ToolTypeSkill,
-			expectedFile: "SKILL.md",
+			name:           "skill",
+			toolType:       models.ToolTypeSkill,
+			expectedFile:   "SKILL.md",
+			shouldHaveFile: true,
 		},
 	}
 
@@ -144,11 +131,13 @@ func TestCreateTypeSpecificFiles(t *testing.T) {
 			toolPath := filepath.Join(tempDir, "test-"+string(tt.toolType))
 			require.NoError(t, os.MkdirAll(toolPath, 0755))
 
-			err := createTypeSpecificFiles(toolPath, tt.toolType, "test-tool")
+			err := createTypeSpecificFiles(toolPath, tt.toolType, "test-tool", "test description")
 			assert.NoError(t, err)
 
-			expectedPath := filepath.Join(toolPath, tt.expectedFile)
-			assert.FileExists(t, expectedPath)
+			if tt.shouldHaveFile {
+				expectedPath := filepath.Join(toolPath, tt.expectedFile)
+				assert.FileExists(t, expectedPath)
+			}
 		})
 	}
 }

@@ -4,7 +4,7 @@
     "go",
     "review"
   ],
-  "description": "Command to review the code base",
+  "description": "review go code base",
   "version": "1.0.0",
   "changelog": {
     "1.0.0": "Initial release"

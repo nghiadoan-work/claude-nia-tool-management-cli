@@ -1,6 +1,6 @@
 # go-code-reviewer
 
-Command to review the code base
+review go code base
 
 ## Type
 

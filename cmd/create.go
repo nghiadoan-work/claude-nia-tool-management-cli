@@ -330,7 +330,8 @@ func createTypeSpecificFiles(toolPath string, toolType models.ToolType, toolName
 	case models.ToolTypeAgent:
 		return createAgentFile(toolPath, toolName)
 	case models.ToolTypeCommand:
-		return createCommandFile(toolPath, toolName)
+		// Don't create any files for commands - users should create spec.md, apply.md, archive.md manually
+		return nil
 	case models.ToolTypeSkill:
 		return createSkillFile(toolPath, toolName, description)
 	default:
@@ -371,51 +372,6 @@ You are a specialized agent for [describe purpose].
 `, toolName)
 
 	return os.WriteFile(agentPath, []byte(content), 0644)
-}
-
-func createCommandFile(toolPath, toolName string) error {
-	commandPath := filepath.Join(toolPath, "command.md")
-
-	content := fmt.Sprintf(`# %s Command
-
-A command for [describe purpose].
-
-## Syntax
-
-`+"```"+`bash
-%s [options] [arguments]
-`+"```"+`
-
-## Options
-
-- `+"`"+`--option1`+"`"+`: Description of option 1
-- `+"`"+`--option2`+"`"+`: Description of option 2
-
-## Arguments
-
-- `+"`"+`arg1`+"`"+`: Description of argument 1
-- `+"`"+`arg2`+"`"+`: Description of argument 2
-
-## Examples
-
-### Example 1
-
-`+"```"+`bash
-%s --option1 value arg1
-`+"```"+`
-
-Description of what this does.
-
-### Example 2
-
-`+"```"+`bash
-%s --option2 arg1 arg2
-`+"```"+`
-
-Description of what this does.
-`, toolName, toolName, toolName, toolName)
-
-	return os.WriteFile(commandPath, []byte(content), 0644)
 }
 
 func createSkillFile(toolPath, toolName, description string) error {
