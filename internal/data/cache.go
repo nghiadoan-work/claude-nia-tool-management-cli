@@ -19,7 +19,7 @@ const (
 	CacheDirName = ".claude-tools-cache"
 
 	// RegistryCacheFileName is the name of the cached registry file
-	RegistryCacheFileName = "registry.json"
+	RegistryCacheFileName = "registry-cache.json"
 
 	// MetadataFileName is the name of the cache metadata file
 	MetadataFileName = "metadata.json"

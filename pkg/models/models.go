@@ -98,7 +98,7 @@ func (t *ToolInfo) ListVersions() []string {
 	return versions
 }
 
-// Registry represents the registry.json structure from GitHub
+// Registry represents the discovered tools from GitHub repository
 type Registry struct {
 	Version   string                   `json:"version"`
 	UpdatedAt time.Time                `json:"updated_at"`
