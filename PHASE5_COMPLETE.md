@@ -246,11 +246,11 @@ When creating a tool with `cntm create agent my-agent`:
 ```bash
 # All tests passing
 $ go test ./cmd ./internal/... ./pkg/... -v
-ok      github.com/nghiadt/claude-nia-tool-management-cli/cmd
-ok      github.com/nghiadt/claude-nia-tool-management-cli/internal/config
-ok      github.com/nghiadt/claude-nia-tool-management-cli/internal/data
-ok      github.com/nghiadt/claude-nia-tool-management-cli/internal/services
-ok      github.com/nghiadt/claude-nia-tool-management-cli/pkg/models
+ok      github.com/nghiadoan-work/claude-nia-tool-management-cli/cmd
+ok      github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/config
+ok      github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data
+ok      github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/services
+ok      github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models
 ```
 
 **Test Coverage**:

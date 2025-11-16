@@ -17,43 +17,43 @@ func TestParseGitHubURL(t *testing.T) {
 	}{
 		{
 			name:      "full HTTPS URL",
-			url:       "https://github.com/nghiadt/claude-tools-registry",
-			wantOwner: "nghiadt",
+			url:       "https://github.com/nghiadoan-work/claude-tools-registry",
+			wantOwner: "nghiadoan-work",
 			wantRepo:  "claude-tools-registry",
 		},
 		{
 			name:      "full HTTPS URL with .git",
-			url:       "https://github.com/nghiadt/claude-tools-registry.git",
-			wantOwner: "nghiadt",
+			url:       "https://github.com/nghiadoan-work/claude-tools-registry.git",
+			wantOwner: "nghiadoan-work",
 			wantRepo:  "claude-tools-registry",
 		},
 		{
 			name:      "HTTP URL",
-			url:       "http://github.com/nghiadt/claude-tools-registry",
-			wantOwner: "nghiadt",
+			url:       "http://github.com/nghiadoan-work/claude-tools-registry",
+			wantOwner: "nghiadoan-work",
 			wantRepo:  "claude-tools-registry",
 		},
 		{
 			name:      "without protocol",
-			url:       "github.com/nghiadt/claude-tools-registry",
-			wantOwner: "nghiadt",
+			url:       "github.com/nghiadoan-work/claude-tools-registry",
+			wantOwner: "nghiadoan-work",
 			wantRepo:  "claude-tools-registry",
 		},
 		{
 			name:      "simple format",
-			url:       "nghiadt/claude-tools-registry",
-			wantOwner: "nghiadt",
+			url:       "nghiadoan-work/claude-tools-registry",
+			wantOwner: "nghiadoan-work",
 			wantRepo:  "claude-tools-registry",
 		},
 		{
 			name:      "with trailing slash",
-			url:       "https://github.com/nghiadt/claude-tools-registry/",
-			wantOwner: "nghiadt",
+			url:       "https://github.com/nghiadoan-work/claude-tools-registry/",
+			wantOwner: "nghiadoan-work",
 			wantRepo:  "claude-tools-registry",
 		},
 		{
 			name:        "invalid - missing repo",
-			url:         "https://github.com/nghiadt",
+			url:         "https://github.com/nghiadoan-work",
 			expectError: true,
 		},
 		{
@@ -63,7 +63,7 @@ func TestParseGitHubURL(t *testing.T) {
 		},
 		{
 			name:        "invalid - just owner",
-			url:         "nghiadt",
+			url:         "nghiadoan-work",
 			expectError: true,
 		},
 	}

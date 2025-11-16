@@ -4,7 +4,7 @@
 
 FSManager provides secure file system operations for the cntm tool, specifically focused on safe ZIP archive handling, path validation, and integrity verification.
 
-**Package**: `github.com/nghiadt/claude-nia-tool-management-cli/internal/data`
+**Package**: `github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data`
 
 ## Type Definition
 
@@ -380,7 +380,7 @@ package main
 
 import (
     "log"
-    "github.com/nghiadt/claude-nia-tool-management-cli/internal/data"
+    "github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data"
 )
 
 func main() {

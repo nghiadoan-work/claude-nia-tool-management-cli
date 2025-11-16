@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/models"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -289,11 +289,11 @@ func TestSearchTools(t *testing.T) {
 	service := NewRegistryServiceWithoutCache(mockClient)
 
 	tests := []struct {
-		name        string
-		filter      *models.SearchFilter
-		wantCount   int
-		wantNames   []string
-		wantErr     bool
+		name      string
+		filter    *models.SearchFilter
+		wantCount int
+		wantNames []string
+		wantErr   bool
 	}{
 		{
 			name:      "search by name",

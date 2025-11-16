@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/version"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/version"
 	"github.com/spf13/cobra"
 )
 

@@ -32,7 +32,7 @@ npx cntm --help
 ### Method 2: npx from GitHub
 
 ```bash
-npx github:nghiadt/claude-nia-tool-management-cli
+npx github:nghiadoan-work/claude-nia-tool-management-cli
 ```
 
 ### Method 3: Global Installation

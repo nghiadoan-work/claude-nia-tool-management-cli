@@ -1,4 +1,4 @@
-module github.com/nghiadt/claude-nia-tool-management-cli
+module github.com/nghiadoan-work/claude-nia-tool-management-cli
 
 go 1.25.4
 

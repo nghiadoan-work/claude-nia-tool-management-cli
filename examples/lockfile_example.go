@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/internal/services"
-	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/models"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/services"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 )
 
 // This example demonstrates how to use the LockFileService to manage installed tools

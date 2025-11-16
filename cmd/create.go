@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/internal/config"
-	"github.com/nghiadt/claude-nia-tool-management-cli/internal/data"
-	"github.com/nghiadt/claude-nia-tool-management-cli/internal/services"
-	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/models"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/config"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/services"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"github.com/spf13/cobra"
 )
 
@@ -168,7 +168,7 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create type-specific files
-	if err := createTypeSpecificFiles(toolPath, toolType, toolName); err != nil {
+	if err := createTypeSpecificFiles(toolPath, toolType, toolName, description); err != nil {
 		return fmt.Errorf("failed to create type-specific files: %w", err)
 	}
 
@@ -325,14 +325,14 @@ This %s helps with [describe usage here].
 	return os.WriteFile(readmePath, []byte(content), 0644)
 }
 
-func createTypeSpecificFiles(toolPath string, toolType models.ToolType, toolName string) error {
+func createTypeSpecificFiles(toolPath string, toolType models.ToolType, toolName, description string) error {
 	switch toolType {
 	case models.ToolTypeAgent:
 		return createAgentFile(toolPath, toolName)
 	case models.ToolTypeCommand:
 		return createCommandFile(toolPath, toolName)
 	case models.ToolTypeSkill:
-		return createSkillFile(toolPath, toolName)
+		return createSkillFile(toolPath, toolName, description)
 	default:
 		return fmt.Errorf("unknown tool type: %s", toolType)
 	}
@@ -382,35 +382,35 @@ A command for [describe purpose].
 
 ## Syntax
 
-` + "```" + `bash
+`+"```"+`bash
 %s [options] [arguments]
-` + "```" + `
+`+"```"+`
 
 ## Options
 
-- ` + "`" + `--option1` + "`" + `: Description of option 1
-- ` + "`" + `--option2` + "`" + `: Description of option 2
+- `+"`"+`--option1`+"`"+`: Description of option 1
+- `+"`"+`--option2`+"`"+`: Description of option 2
 
 ## Arguments
 
-- ` + "`" + `arg1` + "`" + `: Description of argument 1
-- ` + "`" + `arg2` + "`" + `: Description of argument 2
+- `+"`"+`arg1`+"`"+`: Description of argument 1
+- `+"`"+`arg2`+"`"+`: Description of argument 2
 
 ## Examples
 
 ### Example 1
 
-` + "```" + `bash
+`+"```"+`bash
 %s --option1 value arg1
-` + "```" + `
+`+"```"+`
 
 Description of what this does.
 
 ### Example 2
 
-` + "```" + `bash
+`+"```"+`bash
 %s --option2 arg1 arg2
-` + "```" + `
+`+"```"+`
 
 Description of what this does.
 `, toolName, toolName, toolName, toolName)
@@ -418,18 +418,29 @@ Description of what this does.
 	return os.WriteFile(commandPath, []byte(content), 0644)
 }
 
-func createSkillFile(toolPath, toolName string) error {
-	skillPath := filepath.Join(toolPath, "skill.md")
+func createSkillFile(toolPath, toolName, description string) error {
+	skillPath := filepath.Join(toolPath, "SKILL.md")
 
-	content := fmt.Sprintf(`# %s Skill
+	content := fmt.Sprintf(`---
+name: %s
+description: %s
+---
+
+# %s Skill
 
 A skill for [describe purpose].
 
-## Overview
+## Quick Start
 
-[Provide overview of the skill]
+[Provide overview and how to use the skill]
+
+## Implementation Workflow
+
+### Step 1:
+### Step 2:
 
 ## Knowledge Areas
+[Provide Knowledge reference of the skill to file folder ./reference]
 
 - Area 1
 - Area 2
@@ -447,17 +458,17 @@ A skill for [describe purpose].
 
 [Describe pattern]
 
-` + "```" + `
-[Code example]
-` + "```" + `
+`+"```"+`
+[Link example here, Code example should be in ./examples folder]
+`+"```"+`
 
 ### Pattern 2
 
 [Describe pattern]
 
-` + "```" + `
-[Code example]
-` + "```" + `
+`+"```"+`
+[Link example here, Code example should be in ./examples folder]
+`+"```"+`
 
 ## Common Pitfalls
 
@@ -465,10 +476,12 @@ A skill for [describe purpose].
 - Pitfall 2
 
 ## Resources
+[Provide Resource reference of the skill to file folder ./reference]
 
 - Resource 1
 - Resource 2
-`, toolName)
+
+`, toolName, description, toolName)
 
 	return os.WriteFile(skillPath, []byte(content), 0644)
 }

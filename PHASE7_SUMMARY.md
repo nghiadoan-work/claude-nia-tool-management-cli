@@ -88,7 +88,7 @@ UI package tests (`internal/ui/*_test.go`):
 ```
 Package                                              Coverage
 ------------------------------------------------------------
-github.com/nghiadt/claude-nia-tool-management-cli    0.0%
+github.com/nghiadoan-work/claude-nia-tool-management-cli    0.0%
 cmd                                                   22.2%
 internal/config                                       88.0%
 internal/data                                         80.1%

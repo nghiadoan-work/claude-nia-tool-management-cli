@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/internal/config"
-	"github.com/nghiadt/claude-nia-tool-management-cli/internal/data"
-	"github.com/nghiadt/claude-nia-tool-management-cli/internal/services"
-	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/models"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/config"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/services"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )

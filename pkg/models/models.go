@@ -32,9 +32,9 @@ type ToolInfo struct {
 	Type        ToolType  `json:"type"`
 	Author      string    `json:"author"`
 	Tags        []string  `json:"tags"`
-	File        string    `json:"file"`       // Path in repo to ZIP file
-	Size        int64     `json:"size"`       // Size in bytes
-	Downloads   int       `json:"downloads"`  // Download count
+	File        string    `json:"file"`      // Path in repo to ZIP file
+	Size        int64     `json:"size"`      // Size in bytes
+	Downloads   int       `json:"downloads"` // Download count
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -58,8 +58,8 @@ func (t *ToolInfo) Validate() error {
 
 // Registry represents the registry.json structure from GitHub
 type Registry struct {
-	Version   string                    `json:"version"`
-	UpdatedAt time.Time                 `json:"updated_at"`
+	Version   string                   `json:"version"`
+	UpdatedAt time.Time                `json:"updated_at"`
 	Tools     map[ToolType][]*ToolInfo `json:"tools"`
 }
 
@@ -325,7 +325,7 @@ func (c *Config) Validate() error {
 func NewDefaultConfig() *Config {
 	return &Config{
 		Registry: RegistryConfig{
-			URL:    "https://github.com/nghiadt/claude-tools-registry",
+			URL:    "https://github.com/nghiadoan-work/claude-tools-registry",
 			Branch: "main",
 		},
 		Local: LocalConfig{

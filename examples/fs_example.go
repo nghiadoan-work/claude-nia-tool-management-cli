@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/internal/data"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data"
 )
 
 // Example demonstrating FSManager usage for safe ZIP operations

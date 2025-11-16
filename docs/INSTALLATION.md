@@ -17,7 +17,7 @@ npx cntm --help
 ### Using npx from GitHub
 
 ```bash
-npx github:nghiadt/claude-nia-tool-management-cli
+npx github:nghiadoan-work/claude-nia-tool-management-cli
 ```
 
 ## Install with npm
@@ -57,24 +57,24 @@ Add to package.json scripts:
 ### macOS and Linux
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/nghiadt/claude-nia-tool-management-cli/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/nghiadoan-work/claude-nia-tool-management-cli/main/scripts/install.sh | bash
 ```
 
 Or with wget:
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/nghiadt/claude-nia-tool-management-cli/main/scripts/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/nghiadoan-work/claude-nia-tool-management-cli/main/scripts/install.sh | bash
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-iwr -useb https://raw.githubusercontent.com/nghiadt/claude-nia-tool-management-cli/main/scripts/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/nghiadoan-work/claude-nia-tool-management-cli/main/scripts/install.ps1 | iex
 ```
 
 ## Download Pre-built Binaries
 
-1. Go to [GitHub Releases](https://github.com/nghiadt/claude-nia-tool-management-cli/releases)
+1. Go to [GitHub Releases](https://github.com/nghiadoan-work/claude-nia-tool-management-cli/releases)
 2. Download the appropriate file for your platform:
    - macOS Intel: `cntm-1.0.0-darwin-amd64.tar.gz`
    - macOS Apple Silicon: `cntm-1.0.0-darwin-arm64.tar.gz`
@@ -120,7 +120,7 @@ iwr -useb https://raw.githubusercontent.com/nghiadt/claude-nia-tool-management-c
 
 ```bash
 # Clone repository
-git clone https://github.com/nghiadt/claude-nia-tool-management-cli.git
+git clone https://github.com/nghiadoan-work/claude-nia-tool-management-cli.git
 cd claude-nia-tool-management-cli
 
 # Build
@@ -174,7 +174,7 @@ Run cntm in Docker:
 docker run -it --rm \
   -v $(pwd):/workspace \
   -w /workspace \
-  ghcr.io/nghiadt/cntm:latest \
+  ghcr.io/nghiadoan-work/cntm:latest \
   --help
 ```
 

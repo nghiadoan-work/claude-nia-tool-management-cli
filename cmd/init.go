@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/internal/config"
-	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/models"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/config"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"github.com/spf13/cobra"
 )
 
@@ -126,7 +126,7 @@ func initializeLockFile(path string) error {
 		// Use default if config not available
 		cfg = &models.Config{
 			Registry: models.RegistryConfig{
-				URL: "https://github.com/nghiadt/claude-tools-registry",
+				URL: "https://github.com/nghiadoan-work/claude-tools-registry",
 			},
 		}
 	}

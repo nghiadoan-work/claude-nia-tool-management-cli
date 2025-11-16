@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/models"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +24,7 @@ func TestLoadConfig_DefaultOnly(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.NotNil(t, config)
-	assert.Equal(t, "https://github.com/nghiadt/claude-tools-registry", config.Registry.URL)
+	assert.Equal(t, "https://github.com/nghiadoan-work/claude-tools-registry", config.Registry.URL)
 	assert.Equal(t, "main", config.Registry.Branch)
 	assert.Equal(t, ".claude", config.Local.DefaultPath)
 	assert.True(t, config.Local.AutoUpdateCheck)

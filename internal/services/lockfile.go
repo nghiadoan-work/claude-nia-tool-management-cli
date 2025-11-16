@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/models"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 )
 
 const (

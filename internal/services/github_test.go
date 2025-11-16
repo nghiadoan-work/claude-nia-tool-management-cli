@@ -150,50 +150,50 @@ func TestDownloadFile_RateLimitRetry(t *testing.T) {
 
 func TestParseRepoURL(t *testing.T) {
 	tests := []struct {
-		name        string
-		url         string
-		wantOwner   string
-		wantRepo    string
-		wantErr     bool
+		name      string
+		url       string
+		wantOwner string
+		wantRepo  string
+		wantErr   bool
 	}{
 		{
 			name:      "https URL",
-			url:       "https://github.com/nghiadt/claude-tools-registry",
-			wantOwner: "nghiadt",
+			url:       "https://github.com/nghiadoan-work/claude-tools-registry",
+			wantOwner: "nghiadoan-work",
 			wantRepo:  "claude-tools-registry",
 			wantErr:   false,
 		},
 		{
 			name:      "https URL with .git",
-			url:       "https://github.com/nghiadt/claude-tools-registry.git",
-			wantOwner: "nghiadt",
+			url:       "https://github.com/nghiadoan-work/claude-tools-registry.git",
+			wantOwner: "nghiadoan-work",
 			wantRepo:  "claude-tools-registry",
 			wantErr:   false,
 		},
 		{
 			name:      "http URL",
-			url:       "http://github.com/nghiadt/claude-tools-registry",
-			wantOwner: "nghiadt",
+			url:       "http://github.com/nghiadoan-work/claude-tools-registry",
+			wantOwner: "nghiadoan-work",
 			wantRepo:  "claude-tools-registry",
 			wantErr:   false,
 		},
 		{
 			name:      "short format",
-			url:       "github.com/nghiadt/claude-tools-registry",
-			wantOwner: "nghiadt",
+			url:       "github.com/nghiadoan-work/claude-tools-registry",
+			wantOwner: "nghiadoan-work",
 			wantRepo:  "claude-tools-registry",
 			wantErr:   false,
 		},
 		{
 			name:      "owner/repo format",
-			url:       "nghiadt/claude-tools-registry",
-			wantOwner: "nghiadt",
+			url:       "nghiadoan-work/claude-tools-registry",
+			wantOwner: "nghiadoan-work",
 			wantRepo:  "claude-tools-registry",
 			wantErr:   false,
 		},
 		{
 			name:    "invalid format - no repo",
-			url:     "nghiadt",
+			url:     "nghiadoan-work",
 			wantErr: true,
 		},
 		{

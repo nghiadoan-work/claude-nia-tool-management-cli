@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/internal/data"
-	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/models"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 )
 
 // PublisherService handles tool publishing operations
@@ -22,13 +22,13 @@ type PublisherService struct {
 
 // PublishMetadata represents metadata for publishing a tool
 type PublishMetadata struct {
-	Name        string
-	Version     string
-	Description string
-	Author      string
-	Tags        []string
-	Type        models.ToolType
-	Changelog   map[string]string
+	Name         string
+	Version      string
+	Description  string
+	Author       string
+	Tags         []string
+	Type         models.ToolType
+	Changelog    map[string]string
 	Dependencies []string
 }
 
@@ -159,10 +159,10 @@ func (ps *PublisherService) validateToolTypeFiles(toolPath string, toolType mode
 			fmt.Printf("Warning: command.md not found (optional)\n")
 		}
 	case models.ToolTypeSkill:
-		// Skills should have skill.md or similar
-		skillFile := filepath.Join(toolPath, "skill.md")
+		// Skills should have SKILL.md or similar
+		skillFile := filepath.Join(toolPath, "SKILL.md")
 		if _, err := os.Stat(skillFile); os.IsNotExist(err) {
-			fmt.Printf("Warning: skill.md not found (optional)\n")
+			fmt.Printf("Warning: SKILL.md not found (optional)\n")
 		}
 	}
 
@@ -292,12 +292,12 @@ func (ps *PublisherService) PublishToRegistry(toolPath, version string) error {
 
 	// Step 4: Create ToolInfo for registry
 	toolInfo := &models.ToolInfo{
-		Name:        toolName,
-		Version:     version,
-		Type:        toolType,
-		File:        fmt.Sprintf("tools/%ss/%s.zip", toolType, toolName),
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		Name:      toolName,
+		Version:   version,
+		Type:      toolType,
+		File:      fmt.Sprintf("tools/%ss/%s.zip", toolType, toolName),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	// Load metadata if exists

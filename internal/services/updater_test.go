@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/models"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -89,43 +89,43 @@ func (m *MockInstallerService) InstallWithVersion(toolName, version string) erro
 
 func TestNewUpdaterService(t *testing.T) {
 	tests := []struct {
-		name            string
-		registryService RegistryServiceInterface
-		lockFileService LockFileServiceInterface
+		name             string
+		registryService  RegistryServiceInterface
+		lockFileService  LockFileServiceInterface
 		installerService *InstallerService
-		wantErr         bool
-		errMsg          string
+		wantErr          bool
+		errMsg           string
 	}{
 		{
-			name:            "success",
-			registryService: &MockRegistryServiceInterface{},
-			lockFileService: &MockLockFileServiceInterface{},
+			name:             "success",
+			registryService:  &MockRegistryServiceInterface{},
+			lockFileService:  &MockLockFileServiceInterface{},
 			installerService: &InstallerService{},
-			wantErr:         false,
+			wantErr:          false,
 		},
 		{
-			name:            "nil registry service",
-			registryService: nil,
-			lockFileService: &MockLockFileServiceInterface{},
+			name:             "nil registry service",
+			registryService:  nil,
+			lockFileService:  &MockLockFileServiceInterface{},
 			installerService: &InstallerService{},
-			wantErr:         true,
-			errMsg:          "registry service cannot be nil",
+			wantErr:          true,
+			errMsg:           "registry service cannot be nil",
 		},
 		{
-			name:            "nil lock file service",
-			registryService: &MockRegistryServiceInterface{},
-			lockFileService: nil,
+			name:             "nil lock file service",
+			registryService:  &MockRegistryServiceInterface{},
+			lockFileService:  nil,
 			installerService: &InstallerService{},
-			wantErr:         true,
-			errMsg:          "lock file service cannot be nil",
+			wantErr:          true,
+			errMsg:           "lock file service cannot be nil",
 		},
 		{
-			name:            "nil installer service",
-			registryService: &MockRegistryServiceInterface{},
-			lockFileService: &MockLockFileServiceInterface{},
+			name:             "nil installer service",
+			registryService:  &MockRegistryServiceInterface{},
+			lockFileService:  &MockLockFileServiceInterface{},
 			installerService: nil,
-			wantErr:         true,
-			errMsg:          "installer service cannot be nil",
+			wantErr:          true,
+			errMsg:           "installer service cannot be nil",
 		},
 	}
 
@@ -210,13 +210,13 @@ func TestUpdaterService_CompareVersions(t *testing.T) {
 
 func TestUpdaterService_CheckOutdated(t *testing.T) {
 	tests := []struct {
-		name            string
-		installedTools  map[string]*models.InstalledTool
-		registry        *models.Registry
-		listToolsErr    error
-		getRegistryErr  error
-		wantOutdated    int
-		wantErr         bool
+		name           string
+		installedTools map[string]*models.InstalledTool
+		registry       *models.Registry
+		listToolsErr   error
+		getRegistryErr error
+		wantOutdated   int
+		wantErr        bool
 	}{
 		{
 			name: "one outdated tool",
@@ -267,7 +267,7 @@ func TestUpdaterService_CheckOutdated(t *testing.T) {
 			wantErr:      false,
 		},
 		{
-			name: "no installed tools",
+			name:           "no installed tools",
 			installedTools: map[string]*models.InstalledTool{},
 			registry: &models.Registry{
 				Version: "1.0",
@@ -326,15 +326,15 @@ func TestUpdaterService_CheckOutdated(t *testing.T) {
 
 func TestUpdaterService_Update(t *testing.T) {
 	tests := []struct {
-		name           string
-		toolName       string
-		installedTool  *models.InstalledTool
-		latestTool     *models.ToolInfo
-		getToolErr     error
-		getLatestErr   error
-		wantSkipped    bool
-		wantSuccess    bool
-		wantErr        bool
+		name          string
+		toolName      string
+		installedTool *models.InstalledTool
+		latestTool    *models.ToolInfo
+		getToolErr    error
+		getLatestErr  error
+		wantSkipped   bool
+		wantSuccess   bool
+		wantErr       bool
 	}{
 		{
 			name:     "already up to date",
@@ -507,11 +507,11 @@ func TestUpdaterService_IsOutdated(t *testing.T) {
 
 func TestUpdaterService_GetOutdatedCount(t *testing.T) {
 	tests := []struct {
-		name         string
+		name           string
 		installedTools map[string]*models.InstalledTool
-		registry     *models.Registry
-		wantCount    int
-		wantErr      bool
+		registry       *models.Registry
+		wantCount      int
+		wantErr        bool
 	}{
 		{
 			name: "two outdated tools",

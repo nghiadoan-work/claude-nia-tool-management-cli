@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/models"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -104,7 +104,7 @@ func TestCreateSkillFile(t *testing.T) {
 	err := createSkillFile(toolPath, "test-skill")
 	assert.NoError(t, err)
 
-	skillPath := filepath.Join(toolPath, "skill.md")
+	skillPath := filepath.Join(toolPath, "SKILL.md")
 	assert.FileExists(t, skillPath)
 
 	content, err := os.ReadFile(skillPath)
@@ -135,7 +135,7 @@ func TestCreateTypeSpecificFiles(t *testing.T) {
 		{
 			name:         "skill",
 			toolType:     models.ToolTypeSkill,
-			expectedFile: "skill.md",
+			expectedFile: "SKILL.md",
 		},
 	}
 

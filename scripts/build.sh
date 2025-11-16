@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Version information
 VERSION="1.0.0"
-PACKAGE="github.com/nghiadt/claude-nia-tool-management-cli"
+PACKAGE="github.com/nghiadoan-work/claude-nia-tool-management-cli"
 VERSION_PACKAGE="${PACKAGE}/pkg/version"
 
 # Build information

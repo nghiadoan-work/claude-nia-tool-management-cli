@@ -37,7 +37,7 @@ npx cntm install code-reviewer
 ### 2. Using npx with GitHub
 
 ```bash
-npx github:nghiadt/claude-nia-tool-management-cli
+npx github:nghiadoan-work/claude-nia-tool-management-cli
 ```
 
 ### 3. Global Installation

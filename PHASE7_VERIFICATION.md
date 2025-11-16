@@ -82,7 +82,7 @@ Create a test file:
 // test_colors.go
 package main
 
-import "github.com/nghiadt/claude-nia-tool-management-cli/internal/ui"
+import "github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/ui"
 
 func main() {
     ui.PrintSuccess("This is a success message")
@@ -110,7 +110,7 @@ package main
 
 import (
     "time"
-    "github.com/nghiadt/claude-nia-tool-management-cli/internal/ui"
+    "github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/ui"
 )
 
 func main() {

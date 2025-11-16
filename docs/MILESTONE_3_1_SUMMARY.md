@@ -220,7 +220,7 @@ return fmt.Errorf("ZIP contains too many files (%d), maximum allowed: %d",
 package main
 
 import (
-    "github.com/nghiadt/claude-nia-tool-management-cli/internal/data"
+    "github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data"
 )
 
 func main() {

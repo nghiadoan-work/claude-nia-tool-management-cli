@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/models"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"golang.org/x/mod/semver"
 )
 
@@ -18,19 +18,19 @@ type OutdatedTool struct {
 
 // UpdateResult represents the result of updating a single tool
 type UpdateResult struct {
-	ToolName       string
-	Success        bool
-	Error          error
-	OldVersion     string
-	NewVersion     string
-	Skipped        bool // If already up-to-date
-	Message        string
+	ToolName   string
+	Success    bool
+	Error      error
+	OldVersion string
+	NewVersion string
+	Skipped    bool // If already up-to-date
+	Message    string
 }
 
 // UpdaterService handles tool update operations
 type UpdaterService struct {
-	registryService RegistryServiceInterface
-	lockFileService LockFileServiceInterface
+	registryService  RegistryServiceInterface
+	lockFileService  LockFileServiceInterface
 	installerService *InstallerService
 }
 

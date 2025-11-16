@@ -1,0 +1,15 @@
+{
+  "author": "Claude Code",
+  "tags": [
+    "go",
+    "review"
+  ],
+  "description": "Command to review the code base",
+  "version": "1.0.0",
+  "changelog": {
+    "1.0.0": "Initial release"
+  },
+  "custom": {
+    "type": "command"
+  }
+}

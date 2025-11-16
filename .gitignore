@@ -36,8 +36,11 @@ dist/
 .claude-tools-config.yaml
 *.local.yaml
 
-# Test data
-.claude/
+# Test data - ignore everything in .claude except skills/agents/commands
+# .claude/*
+# !.claude/skills/
+# !.claude/agents/
+# !.claude/commands/
 .claude-lock.json
 
 # Temporary files

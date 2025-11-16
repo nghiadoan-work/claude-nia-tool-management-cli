@@ -37,7 +37,7 @@ npx cntm init
 ### Direct from GitHub
 
 ```bash
-npx github:nghiadt/claude-nia-tool-management-cli
+npx github:nghiadoan-work/claude-nia-tool-management-cli
 ```
 
 ## Quick Start
@@ -141,10 +141,10 @@ local:
 
 ## Documentation
 
-- [Command Reference](https://github.com/nghiadt/claude-nia-tool-management-cli/blob/main/docs/COMMANDS.md)
-- [Configuration Guide](https://github.com/nghiadt/claude-nia-tool-management-cli/blob/main/docs/CONFIGURATION.md)
-- [Publishing Guide](https://github.com/nghiadt/claude-nia-tool-management-cli/blob/main/docs/PUBLISHING.md)
-- [Troubleshooting](https://github.com/nghiadt/claude-nia-tool-management-cli/blob/main/docs/TROUBLESHOOTING.md)
+- [Command Reference](https://github.com/nghiadoan-work/claude-nia-tool-management-cli/blob/main/docs/COMMANDS.md)
+- [Configuration Guide](https://github.com/nghiadoan-work/claude-nia-tool-management-cli/blob/main/docs/CONFIGURATION.md)
+- [Publishing Guide](https://github.com/nghiadoan-work/claude-nia-tool-management-cli/blob/main/docs/PUBLISHING.md)
+- [Troubleshooting](https://github.com/nghiadoan-work/claude-nia-tool-management-cli/blob/main/docs/TROUBLESHOOTING.md)
 
 ## Platform Support
 
@@ -165,12 +165,12 @@ brew install cntm
 
 ### Download Binary
 
-Download pre-built binaries from [GitHub Releases](https://github.com/nghiadt/claude-nia-tool-management-cli/releases).
+Download pre-built binaries from [GitHub Releases](https://github.com/nghiadoan-work/claude-nia-tool-management-cli/releases).
 
 ### Build from Source
 
 ```bash
-git clone https://github.com/nghiadt/claude-nia-tool-management-cli.git
+git clone https://github.com/nghiadoan-work/claude-nia-tool-management-cli.git
 cd claude-nia-tool-management-cli
 go build -o cntm
 ./cntm version
@@ -178,24 +178,24 @@ go build -o cntm
 
 ## Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](https://github.com/nghiadt/claude-nia-tool-management-cli/blob/main/CONTRIBUTING.md).
+Contributions are welcome! Please read our [Contributing Guide](https://github.com/nghiadoan-work/claude-nia-tool-management-cli/blob/main/CONTRIBUTING.md).
 
 ## License
 
-MIT License - see [LICENSE](https://github.com/nghiadt/claude-nia-tool-management-cli/blob/main/LICENSE) file for details.
+MIT License - see [LICENSE](https://github.com/nghiadoan-work/claude-nia-tool-management-cli/blob/main/LICENSE) file for details.
 
 ## Links
 
-- [GitHub Repository](https://github.com/nghiadt/claude-nia-tool-management-cli)
-- [Issue Tracker](https://github.com/nghiadt/claude-nia-tool-management-cli/issues)
-- [Changelog](https://github.com/nghiadt/claude-nia-tool-management-cli/blob/main/CHANGELOG.md)
+- [GitHub Repository](https://github.com/nghiadoan-work/claude-nia-tool-management-cli)
+- [Issue Tracker](https://github.com/nghiadoan-work/claude-nia-tool-management-cli/issues)
+- [Changelog](https://github.com/nghiadoan-work/claude-nia-tool-management-cli/blob/main/CHANGELOG.md)
 - [Registry](https://github.com/nghiadoan-work/claude-tools-registry)
 
 ## Support
 
-- 📖 [Documentation](https://github.com/nghiadt/claude-nia-tool-management-cli/tree/main/docs)
-- 🐛 [Report Bug](https://github.com/nghiadt/claude-nia-tool-management-cli/issues)
-- 💡 [Request Feature](https://github.com/nghiadt/claude-nia-tool-management-cli/issues)
+- 📖 [Documentation](https://github.com/nghiadoan-work/claude-nia-tool-management-cli/tree/main/docs)
+- 🐛 [Report Bug](https://github.com/nghiadoan-work/claude-nia-tool-management-cli/issues)
+- 💡 [Request Feature](https://github.com/nghiadoan-work/claude-nia-tool-management-cli/issues)
 
 ---
 

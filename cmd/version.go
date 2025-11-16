@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/nghiadt/claude-nia-tool-management-cli/internal/ui"
-	"github.com/nghiadt/claude-nia-tool-management-cli/pkg/version"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/ui"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/version"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )

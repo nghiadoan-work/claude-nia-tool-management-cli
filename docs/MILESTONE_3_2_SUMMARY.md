@@ -308,7 +308,7 @@ The LockFileService is now ready for integration with:
 --- PASS: TestLockFileService_GetRegistry (0.01s)
 
 PASS
-ok  	github.com/nghiadt/claude-nia-tool-management-cli/internal/services	1.686s
+ok  	github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/services	1.686s
 ```
 
 ## Code Quality Metrics

@@ -79,7 +79,7 @@ jobs:
         with:
           node-version: '18'
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@nghiadt'
+          scope: '@nghiadoan-work'
 
       - name: Publish to GitHub Packages
         run: |
