@@ -1,11 +1,9 @@
 package config
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"gopkg.in/yaml.v3"
@@ -29,24 +27,21 @@ func (cs *ConfigService) GetConfig() *models.Config {
 }
 
 // LoadConfig loads configuration with the following precedence:
-// 1. Environment variables (highest priority)
-// 2. .cntm.env file (project directory)
-// 3. Project config (.claude-tools-config.yaml in current directory)
-// 4. Global config (~/.claude-tools-config.yaml)
-// 5. Default config (lowest priority)
+// 1. Project config (.claude-tools-config.yaml in current directory) - highest priority
+// 2. Global config (~/.claude-tools-config.yaml)
+// 3. Default config - lowest priority
+//
+// Project-level config overrides global config for per-project customization.
 func LoadConfig(configPath string) (*models.Config, error) {
-	// Load .cntm.env file first (if it exists)
-	loadEnvFile()
-
 	// Start with default config
 	config := models.NewDefaultConfig()
 
-	// Try loading global config
+	// Try loading global config first
 	if err := loadGlobalConfig(config); err != nil && !os.IsNotExist(err) {
 		return nil, fmt.Errorf("failed to load global config: %w", err)
 	}
 
-	// Try loading project config
+	// Try loading project config (overrides global)
 	if err := loadProjectConfig(config); err != nil && !os.IsNotExist(err) {
 		return nil, fmt.Errorf("failed to load project config: %w", err)
 	}
@@ -57,9 +52,6 @@ func LoadConfig(configPath string) (*models.Config, error) {
 			return nil, fmt.Errorf("failed to load config from %s: %w", configPath, err)
 		}
 	}
-
-	// Apply environment variable overrides
-	applyEnvOverrides(config)
 
 	// Validate final config
 	if err := config.Validate(); err != nil {
@@ -146,36 +138,6 @@ func mergeConfig(target, source *models.Config) {
 	}
 }
 
-// applyEnvOverrides applies environment variable overrides to config
-func applyEnvOverrides(config *models.Config) {
-	// Registry overrides
-	if url := os.Getenv("CNTM_REGISTRY_URL"); url != "" {
-		config.Registry.URL = url
-	}
-	if branch := os.Getenv("CNTM_REGISTRY_BRANCH"); branch != "" {
-		config.Registry.Branch = branch
-	}
-	if token := os.Getenv("CNTM_REGISTRY_TOKEN"); token != "" {
-		config.Registry.AuthToken = token
-	}
-
-	// Local overrides
-	if path := os.Getenv("CNTM_DEFAULT_PATH"); path != "" {
-		config.Local.DefaultPath = path
-	}
-	if autoUpdate := os.Getenv("CNTM_AUTO_UPDATE"); autoUpdate != "" {
-		config.Local.AutoUpdateCheck = autoUpdate == "true" || autoUpdate == "1"
-	}
-
-	// Publish overrides
-	if author := os.Getenv("CNTM_DEFAULT_AUTHOR"); author != "" {
-		config.Publish.DefaultAuthor = author
-	}
-	if versionBump := os.Getenv("CNTM_AUTO_VERSION_BUMP"); versionBump != "" {
-		config.Publish.AutoVersionBump = versionBump
-	}
-}
-
 // SaveConfig saves the config to a YAML file
 func SaveConfig(config *models.Config, path string) error {
 	if err := config.Validate(); err != nil {
@@ -216,46 +178,4 @@ func GetProjectConfigPath() (string, error) {
 		return "", err
 	}
 	return filepath.Join(currentDir, ".claude-tools-config.yaml"), nil
-}
-
-// loadEnvFile loads environment variables from .cntm.env file in current directory
-func loadEnvFile() {
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return
-	}
-
-	envPath := filepath.Join(currentDir, ".cntm.env")
-	file, err := os.Open(envPath)
-	if err != nil {
-		return // File doesn't exist or can't be read, that's okay
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-
-		// Skip empty lines and comments
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-
-		// Parse KEY=VALUE format
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-
-		key := strings.TrimSpace(parts[0])
-		value := strings.TrimSpace(parts[1])
-
-		// Remove quotes if present
-		value = strings.Trim(value, "\"'")
-
-		// Only set if not already set in environment
-		if os.Getenv(key) == "" {
-			os.Setenv(key, value)
-		}
-	}
 }

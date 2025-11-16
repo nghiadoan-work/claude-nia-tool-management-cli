@@ -22,9 +22,6 @@ var skillTemplateGuide string
 //go:embed templates/COMMAND_TEMPLATE_GUIDE.md
 var commandTemplateGuide string
 
-//go:embed templates/.cntm.env
-var cntmEnvTemplate string
-
 var (
 	// Init flags
 	initPath  string
@@ -42,7 +39,6 @@ This command will:
   - Create subdirectories: agents/, commands/, skills/
   - Initialize .claude-lock.json with empty tool list
   - Create template guides for creating tools
-  - Create .cntm.env for registry configuration
   - Detect if already initialized and warn (unless --force)
 
 The .claude directory structure:
@@ -55,8 +51,9 @@ The .claude directory structure:
   ├── COMMAND_TEMPLATE_GUIDE.md # Guide for creating commands
   └── .claude-lock.json         # Installed tools lock file
 
-Project root:
-  .cntm.env                      # Environment configuration (registry URL, token, etc.)
+Configuration:
+  - Global config: ~/.claude-tools-config.yaml (optional)
+  - Project config: .claude-tools-config.yaml (optional, overrides global)
 
 Examples:
   cntm init                         # Initialize in current directory
@@ -132,28 +129,16 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println("  Created template guides")
 
-	// Create .cntm.env file in project root
-	projectRoot := filepath.Dir(claudeDir)
-	if filepath.Base(absPath) == ".claude" {
-		projectRoot = filepath.Dir(absPath)
-	}
-	if err := createEnvFile(projectRoot); err != nil {
-		return fmt.Errorf("failed to create .cntm.env: %w", err)
-	}
-	fmt.Println("  Created .cntm.env")
-
 	// Success message
 	fmt.Println()
 	fmt.Println("Successfully initialized Claude tools project!")
 	fmt.Println()
 	fmt.Println("Next steps:")
-	fmt.Println("  1. Configure registry:  Edit .cntm.env to set registry URL and token")
+	fmt.Println("  1. Configure registry:  Create .claude-tools-config.yaml (see global config for reference)")
 	fmt.Println("  2. Search for tools:    cntm search <query>")
 	fmt.Println("  3. Install a tool:      cntm install <tool-name>")
 	fmt.Println("  4. Update tools:        cntm update --all")
 	fmt.Println("  5. Publish your tool:   cntm publish")
-	fmt.Println()
-	fmt.Println("Note: Add .cntm.env to .gitignore if it contains sensitive tokens")
 
 	return nil
 }
@@ -205,22 +190,6 @@ func createTemplateGuides(claudeDir string) error {
 		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
 			return fmt.Errorf("failed to write %s: %w", filename, err)
 		}
-	}
-
-	return nil
-}
-
-// createEnvFile creates the .cntm.env file in the project root
-func createEnvFile(projectRoot string) error {
-	envPath := filepath.Join(projectRoot, ".cntm.env")
-
-	// Don't overwrite existing .cntm.env file
-	if _, err := os.Stat(envPath); err == nil {
-		return nil // File already exists, skip
-	}
-
-	if err := os.WriteFile(envPath, []byte(cntmEnvTemplate), 0644); err != nil {
-		return fmt.Errorf("failed to write .cntm.env: %w", err)
 	}
 
 	return nil
