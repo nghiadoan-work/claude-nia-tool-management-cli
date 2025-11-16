@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -11,6 +12,18 @@ import (
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"github.com/spf13/cobra"
 )
+
+//go:embed templates/AGENT_TEMPLATE_GUIDE.md
+var agentTemplateGuide string
+
+//go:embed templates/SKILL_TEMPLATE_GUIDE.md
+var skillTemplateGuide string
+
+//go:embed templates/COMMAND_TEMPLATE_GUIDE.md
+var commandTemplateGuide string
+
+//go:embed templates/.cntm.env
+var cntmEnvTemplate string
 
 var (
 	// Init flags
@@ -28,14 +41,22 @@ This command will:
   - Create .claude/ directory
   - Create subdirectories: agents/, commands/, skills/
   - Initialize .claude-lock.json with empty tool list
+  - Create template guides for creating tools
+  - Create .cntm.env for registry configuration
   - Detect if already initialized and warn (unless --force)
 
 The .claude directory structure:
   .claude/
-  ├── agents/          # Agent tools
-  ├── commands/        # Command tools
-  ├── skills/          # Skill tools
-  └── .claude-lock.json # Installed tools lock file
+  ├── agents/                   # Agent tools
+  ├── commands/                 # Command tools
+  ├── skills/                   # Skill tools
+  ├── AGENT_TEMPLATE_GUIDE.md   # Guide for creating agents
+  ├── SKILL_TEMPLATE_GUIDE.md   # Guide for creating skills
+  ├── COMMAND_TEMPLATE_GUIDE.md # Guide for creating commands
+  └── .claude-lock.json         # Installed tools lock file
+
+Project root:
+  .cntm.env                      # Environment configuration (registry URL, token, etc.)
 
 Examples:
   cntm init                         # Initialize in current directory
@@ -105,15 +126,34 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println("  Created .claude-lock.json")
 
+	// Create template guide files
+	if err := createTemplateGuides(claudeDir); err != nil {
+		return fmt.Errorf("failed to create template guides: %w", err)
+	}
+	fmt.Println("  Created template guides")
+
+	// Create .cntm.env file in project root
+	projectRoot := filepath.Dir(claudeDir)
+	if filepath.Base(absPath) == ".claude" {
+		projectRoot = filepath.Dir(absPath)
+	}
+	if err := createEnvFile(projectRoot); err != nil {
+		return fmt.Errorf("failed to create .cntm.env: %w", err)
+	}
+	fmt.Println("  Created .cntm.env")
+
 	// Success message
 	fmt.Println()
 	fmt.Println("Successfully initialized Claude tools project!")
 	fmt.Println()
 	fmt.Println("Next steps:")
-	fmt.Println("  1. Search for tools:    cntm search <query>")
-	fmt.Println("  2. Browse tools:        cntm browse")
+	fmt.Println("  1. Configure registry:  Edit .cntm.env to set registry URL and token")
+	fmt.Println("  2. Search for tools:    cntm search <query>")
 	fmt.Println("  3. Install a tool:      cntm install <tool-name>")
-	fmt.Println("  4. List installed:      cntm list")
+	fmt.Println("  4. Update tools:        cntm update --all")
+	fmt.Println("  5. Publish your tool:   cntm publish")
+	fmt.Println()
+	fmt.Println("Note: Add .cntm.env to .gitignore if it contains sensitive tokens")
 
 	return nil
 }
@@ -147,6 +187,40 @@ func initializeLockFile(path string) error {
 
 	if err := os.WriteFile(path, data, 0644); err != nil {
 		return fmt.Errorf("failed to write lock file: %w", err)
+	}
+
+	return nil
+}
+
+// createTemplateGuides creates the template guide files in the .claude directory
+func createTemplateGuides(claudeDir string) error {
+	guides := map[string]string{
+		"AGENT_TEMPLATE_GUIDE.md":   agentTemplateGuide,
+		"SKILL_TEMPLATE_GUIDE.md":   skillTemplateGuide,
+		"COMMAND_TEMPLATE_GUIDE.md": commandTemplateGuide,
+	}
+
+	for filename, content := range guides {
+		filePath := filepath.Join(claudeDir, filename)
+		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+			return fmt.Errorf("failed to write %s: %w", filename, err)
+		}
+	}
+
+	return nil
+}
+
+// createEnvFile creates the .cntm.env file in the project root
+func createEnvFile(projectRoot string) error {
+	envPath := filepath.Join(projectRoot, ".cntm.env")
+
+	// Don't overwrite existing .cntm.env file
+	if _, err := os.Stat(envPath); err == nil {
+		return nil // File already exists, skip
+	}
+
+	if err := os.WriteFile(envPath, []byte(cntmEnvTemplate), 0644); err != nil {
+		return fmt.Errorf("failed to write .cntm.env: %w", err)
 	}
 
 	return nil

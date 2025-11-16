@@ -1,9 +1,11 @@
 package config
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"gopkg.in/yaml.v3"
@@ -28,10 +30,14 @@ func (cs *ConfigService) GetConfig() *models.Config {
 
 // LoadConfig loads configuration with the following precedence:
 // 1. Environment variables (highest priority)
-// 2. Project config (.claude-tools-config.yaml in current directory)
-// 3. Global config (~/.claude-tools-config.yaml)
-// 4. Default config (lowest priority)
+// 2. .cntm.env file (project directory)
+// 3. Project config (.claude-tools-config.yaml in current directory)
+// 4. Global config (~/.claude-tools-config.yaml)
+// 5. Default config (lowest priority)
 func LoadConfig(configPath string) (*models.Config, error) {
+	// Load .cntm.env file first (if it exists)
+	loadEnvFile()
+
 	// Start with default config
 	config := models.NewDefaultConfig()
 
@@ -210,4 +216,46 @@ func GetProjectConfigPath() (string, error) {
 		return "", err
 	}
 	return filepath.Join(currentDir, ".claude-tools-config.yaml"), nil
+}
+
+// loadEnvFile loads environment variables from .cntm.env file in current directory
+func loadEnvFile() {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return
+	}
+
+	envPath := filepath.Join(currentDir, ".cntm.env")
+	file, err := os.Open(envPath)
+	if err != nil {
+		return // File doesn't exist or can't be read, that's okay
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		// Parse KEY=VALUE format
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+
+		// Remove quotes if present
+		value = strings.Trim(value, "\"'")
+
+		// Only set if not already set in environment
+		if os.Getenv(key) == "" {
+			os.Setenv(key, value)
+		}
+	}
 }
