@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/config"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data"
@@ -147,13 +146,7 @@ func runPublish(cmd *cobra.Command, args []string) error {
 		AuthToken: cfg.Registry.AuthToken,
 	})
 
-	cacheDir := cfg.Local.DefaultPath + "/.cache"
-	cacheManager, err := data.NewCacheManager(cacheDir, 3600*time.Second)
-	if err != nil {
-		return fmt.Errorf("failed to create cache manager: %w", err)
-	}
-
-	registryService := services.NewRegistryService(githubClient, cacheManager)
+	registryService := services.NewRegistryServiceWithoutCache(githubClient)
 
 	publisherService, err := services.NewPublisherService(
 		fsManager,

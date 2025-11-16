@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/config"
-	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/services"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"github.com/olekukonko/tablewriter"
@@ -84,11 +82,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		AuthToken: cfg.Registry.AuthToken,
 	})
 
-	cacheManager, err := data.NewCacheManager(basePath, 3600*time.Second) // 1 hour TTL
-	if err != nil {
-		return fmt.Errorf("failed to create cache manager: %w", err)
-	}
-	registryService := services.NewRegistryService(githubClient, cacheManager)
+	registryService := services.NewRegistryServiceWithoutCache(githubClient)
 
 	// Build search filter
 	filter := &models.SearchFilter{

@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/config"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data"
@@ -92,11 +91,7 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		AuthToken: cfg.Registry.AuthToken,
 	})
 
-	cacheManager, err := data.NewCacheManager(installBasePath, 3600*time.Second) // 1 hour TTL
-	if err != nil {
-		return fmt.Errorf("failed to create cache manager: %w", err)
-	}
-	registryService := services.NewRegistryService(githubClient, cacheManager)
+	registryService := services.NewRegistryServiceWithoutCache(githubClient)
 
 	// Initialize FSManager and LockFileService
 	fsManager, err := data.NewFSManager(installBasePath)
