@@ -1,9 +1,9 @@
 {
   "author": "Claude Code",
   "description": "A agent tool for Claude Code",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "changelog": {
-    "1.0.0": "Release 1.0.0",
+    "1.0.0": "Initial release",
     "1.0.1": "Release 1.0.1",
     "1.0.2": "Release 1.0.2"
   },
