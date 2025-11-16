@@ -21,16 +21,20 @@ var rootCmd = &cobra.Command{
 	Long: `cntm is a package manager for Claude Code tools (agents, commands, and skills).
 
 Like npm for Node.js, cntm helps you:
+  - Initialize tool configuration
+  - Search and discover available tools
   - Install tools from a GitHub registry
   - Update tools to the latest versions
   - Publish your own tools to share with others
-  - Search and discover available tools
+  - Remove installed tools
 
-Example usage:
+Available commands:
+  cntm init                     # Initialize tool configuration
   cntm search "code review"     # Search for tools
   cntm install code-reviewer    # Install a tool
   cntm update --all             # Update all tools
-  cntm publish my-agent         # Publish your tool`,
+  cntm publish my-agent         # Publish your tool
+  cntm remove code-reviewer     # Remove an installed tool`,
 	Version: version.Version,
 }
 

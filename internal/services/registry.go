@@ -3,15 +3,19 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/google/go-github/v56/github"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 )
 
 // GitHubClientInterface defines the methods needed from GitHubClient
 type GitHubClientInterface interface {
 	FetchFile(path string) ([]byte, error)
+	ListDirectory(path string) ([]*github.RepositoryContent, error)
 }
 
 // CacheManagerInterface defines the methods needed from CacheManager
@@ -48,38 +52,161 @@ func NewRegistryServiceWithoutCache(githubClient GitHubClientInterface) *Registr
 	}
 }
 
-// FetchRegistry fetches and parses the registry.json from GitHub
+// FetchRegistry discovers tools from the folder structure in GitHub
 func (rs *RegistryService) FetchRegistry() (*models.Registry, error) {
-	// Fetch registry.json from GitHub
-	data, err := rs.githubClient.FetchFile("registry.json")
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch registry: %w", err)
+	registry := &models.Registry{
+		Version:   "2.0.0",
+		UpdatedAt: time.Now(),
+		Tools:     make(map[models.ToolType][]*models.ToolInfo),
 	}
 
-	// Parse JSON
-	var registry models.Registry
-	if err := json.Unmarshal(data, &registry); err != nil {
-		return nil, fmt.Errorf("failed to parse registry: %w", err)
+	// Tool types to scan
+	toolTypes := []models.ToolType{
+		models.ToolTypeAgent,
+		models.ToolTypeCommand,
+		models.ToolTypeSkill,
 	}
 
-	// Validate registry
-	if err := registry.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid registry: %w", err)
+	// Discover tools for each type
+	for _, toolType := range toolTypes {
+		tools, err := rs.discoverToolsOfType(toolType)
+		if err != nil {
+			// Log warning but continue with other types
+			fmt.Printf("Warning: failed to discover %s tools: %v\n", toolType, err)
+			continue
+		}
+		registry.Tools[toolType] = tools
 	}
 
 	// Cache the registry in memory
-	rs.registry = &registry
+	rs.registry = registry
 
 	// Cache to disk if cache manager is available
 	if rs.useCache && rs.cacheManager != nil {
-		if err := rs.cacheManager.SetRegistry(&registry); err != nil {
+		if err := rs.cacheManager.SetRegistry(registry); err != nil {
 			// Log warning but don't fail - cache is not critical
-			// In production, this would use a proper logger
 			_ = err
 		}
 	}
 
-	return &registry, nil
+	return registry, nil
+}
+
+// discoverToolsOfType discovers all tools of a specific type from the folder structure
+func (rs *RegistryService) discoverToolsOfType(toolType models.ToolType) ([]*models.ToolInfo, error) {
+	// Construct the path: tools/agents/, tools/commands/, tools/skills/
+	dirPath := fmt.Sprintf("tools/%ss", toolType)
+
+	// List directory contents
+	contents, err := rs.githubClient.ListDirectory(dirPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list directory %s: %w", dirPath, err)
+	}
+
+	var tools []*models.ToolInfo
+
+	// Iterate through each tool directory
+	for _, item := range contents {
+		if item.GetType() != "dir" {
+			continue // Skip files, only process directories
+		}
+
+		toolName := item.GetName()
+
+		// Fetch and parse metadata.json for this tool
+		toolInfo, err := rs.fetchToolMetadata(toolType, toolName)
+		if err != nil {
+			// Log warning but continue with other tools
+			fmt.Printf("Warning: failed to fetch metadata for %s/%s: %v\n", toolType, toolName, err)
+			continue
+		}
+
+		tools = append(tools, toolInfo)
+	}
+
+	return tools, nil
+}
+
+// fetchToolMetadata fetches metadata for a specific tool
+func (rs *RegistryService) fetchToolMetadata(toolType models.ToolType, toolName string) (*models.ToolInfo, error) {
+	// Fetch metadata.json
+	metadataPath := fmt.Sprintf("tools/%ss/%s/metadata.json", toolType, toolName)
+	data, err := rs.githubClient.FetchFile(metadataPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch metadata.json: %w", err)
+	}
+
+	// Parse metadata
+	var metadata models.ToolMetadata
+	if err := json.Unmarshal(data, &metadata); err != nil {
+		return nil, fmt.Errorf("failed to parse metadata.json: %w", err)
+	}
+
+	// Discover available versions by listing version files
+	versions, err := rs.discoverToolVersions(toolType, toolName)
+	if err != nil {
+		// If we can't discover versions, create a single version from metadata
+		versions = map[string]*models.VersionInfo{
+			metadata.Version: {
+				File:      fmt.Sprintf("tools/%ss/%s/v%s.zip", toolType, toolName, strings.ReplaceAll(metadata.Version, ".", "-")),
+				Size:      0,
+				CreatedAt: time.Now(),
+			},
+		}
+	}
+
+	// Build ToolInfo
+	toolInfo := &models.ToolInfo{
+		Name:          toolName,
+		Type:          toolType,
+		Author:        metadata.Author,
+		Description:   metadata.Description,
+		Tags:          metadata.Tags,
+		LatestVersion: metadata.Version,
+		Versions:      versions,
+		Downloads:     0, // Can't track downloads without a database
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+
+	return toolInfo, nil
+}
+
+// discoverToolVersions discovers all available versions for a tool
+func (rs *RegistryService) discoverToolVersions(toolType models.ToolType, toolName string) (map[string]*models.VersionInfo, error) {
+	dirPath := fmt.Sprintf("tools/%ss/%s", toolType, toolName)
+
+	contents, err := rs.githubClient.ListDirectory(dirPath)
+	if err != nil {
+		return nil, err
+	}
+
+	versions := make(map[string]*models.VersionInfo)
+
+	for _, item := range contents {
+		if item.GetType() != "file" {
+			continue
+		}
+
+		filename := item.GetName()
+		// Look for .zip files (e.g., v1-0-0.zip)
+		if !strings.HasSuffix(filename, ".zip") {
+			continue
+		}
+
+		// Extract version from filename (v1-0-0.zip -> 1.0.0)
+		versionStr := strings.TrimSuffix(filename, ".zip")
+		versionStr = strings.TrimPrefix(versionStr, "v")
+		version := strings.ReplaceAll(versionStr, "-", ".")
+
+		versions[version] = &models.VersionInfo{
+			File:      filepath.Join(dirPath, filename),
+			Size:      int64(item.GetSize()),
+			CreatedAt: time.Now(),
+		}
+	}
+
+	return versions, nil
 }
 
 // GetRegistry returns the cached registry or fetches it if not available

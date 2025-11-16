@@ -66,6 +66,41 @@ func NewGitHubClient(config GitHubClientConfig) *GitHubClient {
 	}
 }
 
+// ListDirectory lists the contents of a directory in the GitHub repository
+func (gc *GitHubClient) ListDirectory(path string) ([]*github.RepositoryContent, error) {
+	var contents []*github.RepositoryContent
+	var err error
+
+	err = gc.retryWithBackoff(func() error {
+		_, dirContents, resp, fetchErr := gc.client.Repositories.GetContents(
+			gc.ctx,
+			gc.owner,
+			gc.repo,
+			path,
+			&github.RepositoryContentGetOptions{Ref: gc.branch},
+		)
+
+		if fetchErr != nil {
+			// Check for rate limit
+			if resp != nil && resp.StatusCode == http.StatusForbidden {
+				if gc.isRateLimited(resp) {
+					return &RateLimitError{RetryAfter: gc.getRateLimitReset(resp)}
+				}
+			}
+			return fetchErr
+		}
+
+		contents = dirContents
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to list directory %s: %w", path, err)
+	}
+
+	return contents, nil
+}
+
 // FetchFile fetches a file from the GitHub repository
 func (gc *GitHubClient) FetchFile(path string) ([]byte, error) {
 	var content []byte
