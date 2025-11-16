@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/google/go-github/v56/github"
@@ -34,11 +37,17 @@ type GitHubClientConfig struct {
 func NewGitHubClient(config GitHubClientConfig) *GitHubClient {
 	ctx := context.Background()
 
+	// Try to get auth token from various sources if not provided
+	authToken := config.AuthToken
+	if authToken == "" {
+		authToken = GetGitHubToken()
+	}
+
 	var client *github.Client
-	if config.AuthToken != "" {
+	if authToken != "" {
 		// Authenticated client (5000 req/hr)
 		ts := oauth2.StaticTokenSource(
-			&oauth2.Token{AccessToken: config.AuthToken},
+			&oauth2.Token{AccessToken: authToken},
 		)
 		tc := oauth2.NewClient(ctx, ts)
 		client = github.NewClient(tc)
@@ -53,7 +62,7 @@ func NewGitHubClient(config GitHubClientConfig) *GitHubClient {
 		repo:      config.Repo,
 		branch:    config.Branch,
 		ctx:       ctx,
-		authToken: config.AuthToken,
+		authToken: authToken,
 	}
 }
 
@@ -295,4 +304,148 @@ func splitPath(path string) []string {
 		parts = append(parts, current)
 	}
 	return parts
+}
+
+// ForkRepository forks a repository to the authenticated user's account
+func (gc *GitHubClient) ForkRepository(owner, repo string) (*github.Repository, error) {
+	fork, _, err := gc.client.Repositories.CreateFork(gc.ctx, owner, repo, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fork repository: %w", err)
+	}
+
+	// Wait for fork to be ready (GitHub needs time to prepare the fork)
+	time.Sleep(3 * time.Second)
+	return fork, nil
+}
+
+// GetAuthenticatedUser returns the authenticated user's login
+func (gc *GitHubClient) GetAuthenticatedUser() (string, error) {
+	user, _, err := gc.client.Users.Get(gc.ctx, "")
+	if err != nil {
+		return "", fmt.Errorf("failed to get authenticated user: %w", err)
+	}
+	return user.GetLogin(), nil
+}
+
+// GetDefaultBranch gets the default branch of a repository
+func (gc *GitHubClient) GetDefaultBranch(owner, repo string) (string, error) {
+	repository, _, err := gc.client.Repositories.Get(gc.ctx, owner, repo)
+	if err != nil {
+		return "", fmt.Errorf("failed to get repository: %w", err)
+	}
+	return repository.GetDefaultBranch(), nil
+}
+
+// CreateBranch creates a new branch from a base branch
+func (gc *GitHubClient) CreateBranch(owner, repo, newBranch, baseBranch string) error {
+	// Get the base branch reference
+	baseRef, _, err := gc.client.Git.GetRef(gc.ctx, owner, repo, "refs/heads/"+baseBranch)
+	if err != nil {
+		return fmt.Errorf("failed to get base branch: %w", err)
+	}
+
+	// Create new branch reference
+	newRef := &github.Reference{
+		Ref: github.String("refs/heads/" + newBranch),
+		Object: &github.GitObject{
+			SHA: baseRef.Object.SHA,
+		},
+	}
+
+	_, _, err = gc.client.Git.CreateRef(gc.ctx, owner, repo, newRef)
+	if err != nil {
+		return fmt.Errorf("failed to create branch: %w", err)
+	}
+
+	return nil
+}
+
+// UploadFile uploads a file to a repository
+func (gc *GitHubClient) UploadFile(owner, repo, path, branch string, content []byte, message string) error {
+	// Check if file exists
+	_, _, resp, _ := gc.client.Repositories.GetContents(
+		gc.ctx, owner, repo, path,
+		&github.RepositoryContentGetOptions{Ref: branch},
+	)
+
+	opts := &github.RepositoryContentFileOptions{
+		Message: github.String(message),
+		Content: content,
+		Branch:  github.String(branch),
+	}
+
+	// If file exists (status 200), we need its SHA for update
+	if resp != nil && resp.StatusCode == http.StatusOK {
+		fileContent, _, _, err := gc.client.Repositories.GetContents(
+			gc.ctx, owner, repo, path,
+			&github.RepositoryContentGetOptions{Ref: branch},
+		)
+		if err == nil && fileContent != nil {
+			opts.SHA = fileContent.SHA
+		}
+	}
+
+	_, _, err := gc.client.Repositories.CreateFile(gc.ctx, owner, repo, path, opts)
+	if err != nil {
+		return fmt.Errorf("failed to upload file: %w", err)
+	}
+
+	return nil
+}
+
+// CreatePullRequest creates a pull request
+func (gc *GitHubClient) CreatePullRequest(owner, repo, title, body, head, base string) (*github.PullRequest, error) {
+	newPR := &github.NewPullRequest{
+		Title: github.String(title),
+		Head:  github.String(head),
+		Base:  github.String(base),
+		Body:  github.String(body),
+	}
+
+	pr, _, err := gc.client.PullRequests.Create(gc.ctx, owner, repo, newPR)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create pull request: %w", err)
+	}
+
+	return pr, nil
+}
+
+// GetGitHubToken attempts to get a GitHub token from various sources
+func GetGitHubToken() string {
+	// 1. Check GITHUB_TOKEN environment variable
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		return token
+	}
+
+	// 2. Check GH_TOKEN environment variable (used by gh CLI)
+	if token := os.Getenv("GH_TOKEN"); token != "" {
+		return token
+	}
+
+	// 3. Try to get token from gh CLI
+	if token := getTokenFromGHCLI(); token != "" {
+		return token
+	}
+
+	return ""
+}
+
+// getTokenFromGHCLI attempts to get the GitHub token from gh CLI
+func getTokenFromGHCLI() string {
+	// Check if gh CLI is installed
+	cmd := exec.Command("gh", "auth", "status")
+	if err := cmd.Run(); err != nil {
+		// gh CLI not installed or not authenticated
+		return ""
+	}
+
+	// Get the token
+	cmd = exec.Command("gh", "auth", "token")
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+
+	token := strings.TrimSpace(string(output))
+	return token
 }

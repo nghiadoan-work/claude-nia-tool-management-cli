@@ -318,7 +318,7 @@ func (ps *PublisherService) PublishToRegistry(toolPath, version string) error {
 	}
 	toolInfo.Size = zipInfo.Size()
 
-	// Step 5: Create pull request (simplified for now)
+	// Print package info
 	fmt.Printf("\nTool packaged successfully!\n")
 	fmt.Printf("  Tool:    %s\n", toolName)
 	fmt.Printf("  Type:    %s\n", toolType)
@@ -326,29 +326,211 @@ func (ps *PublisherService) PublishToRegistry(toolPath, version string) error {
 	fmt.Printf("  Size:    %d bytes\n", toolInfo.Size)
 	fmt.Printf("  Hash:    %s\n", hash)
 	fmt.Printf("  Package: %s\n", zipPath)
-	fmt.Printf("\nTo complete publishing:\n")
-	fmt.Printf("1. Upload %s to registry repository\n", zipPath)
-	fmt.Printf("2. Update registry.json with the tool information\n")
-	fmt.Printf("3. Create a pull request to the registry\n")
+
+	// Step 5: Create pull request if configured
+	if ps.config.Publish.CreatePR {
+		fmt.Printf("\nCreating pull request to registry...\n")
+
+		// Read ZIP file for upload
+		zipData, err := os.ReadFile(zipPath)
+		if err != nil {
+			return fmt.Errorf("failed to read ZIP file: %w", err)
+		}
+
+		if err := ps.CreatePullRequest(toolInfo, zipData, hash); err != nil {
+			return fmt.Errorf("failed to create pull request: %w", err)
+		}
+
+		fmt.Printf("\nPublication complete!\n")
+	} else {
+		fmt.Printf("\nTo complete publishing:\n")
+		fmt.Printf("1. Upload %s to registry repository\n", zipPath)
+		fmt.Printf("2. Update registry.json with the tool information\n")
+		fmt.Printf("3. Create a pull request to the registry\n")
+		fmt.Printf("\nTip: Set 'create_pr: true' in config to automate this process\n")
+	}
 
 	return nil
 }
 
 // CreatePullRequest creates a PR to the registry repository
-// Simplified implementation - in production, this would use GitHub API
-func (ps *PublisherService) CreatePullRequest(tool *models.ToolInfo, zipPath string) error {
-	// This is a placeholder for the full GitHub PR workflow
-	// In a complete implementation, this would:
-	// 1. Fork the registry repo (if not already forked)
-	// 2. Create a new branch
-	// 3. Upload the ZIP file
-	// 4. Update registry.json
-	// 5. Commit changes
-	// 6. Create pull request
+func (ps *PublisherService) CreatePullRequest(tool *models.ToolInfo, zipData []byte, hash string) error {
+	// Check if we have a GitHub token (should be auto-detected by GitHubClient)
+	if ps.githubClient.authToken == "" {
+		return fmt.Errorf(`GitHub authentication required for automated PR creation
 
-	fmt.Printf("Creating pull request for %s@%s...\n", tool.Name, tool.Version)
-	fmt.Printf("Note: Automated PR creation is not yet implemented.\n")
-	fmt.Printf("Please manually create a PR to the registry repository.\n")
+Please authenticate using one of these methods:
+1. Install and login to GitHub CLI:
+   brew install gh
+   gh auth login
+
+2. Set environment variable:
+   export GITHUB_TOKEN=your_token_here
+
+3. Add to config file (~/.claude-tools-config.yaml):
+   registry:
+     auth_token: your_token_here
+
+Get a token from: https://github.com/settings/tokens (needs 'repo' scope)`)
+	}
+
+	// Parse registry URL to get owner and repo
+	owner, repo, err := ParseRepoURL(ps.config.Registry.URL)
+	if err != nil {
+		return fmt.Errorf("failed to parse registry URL: %w", err)
+	}
+
+	fmt.Printf("  Registry: %s/%s\n", owner, repo)
+
+	// Step 1: Get authenticated user
+	username, err := ps.githubClient.GetAuthenticatedUser()
+	if err != nil {
+		return fmt.Errorf("failed to get authenticated user: %w", err)
+	}
+	fmt.Printf("  User: %s\n", username)
+
+	// Step 2: Fork repository if needed
+	fmt.Printf("  Checking fork...\n")
+	defaultBranch, err := ps.githubClient.GetDefaultBranch(username, repo)
+	if err != nil {
+		// Fork doesn't exist, create it
+		fmt.Printf("  Creating fork...\n")
+		fork, err := ps.githubClient.ForkRepository(owner, repo)
+		if err != nil {
+			return fmt.Errorf("failed to fork repository: %w", err)
+		}
+		defaultBranch = fork.GetDefaultBranch()
+		fmt.Printf("  Fork created\n")
+	} else {
+		fmt.Printf("  Fork exists\n")
+	}
+
+	// Step 3: Create a new branch
+	branchName := fmt.Sprintf("publish-%s-%s", tool.Name, tool.Version)
+	fmt.Printf("  Creating branch: %s\n", branchName)
+
+	err = ps.githubClient.CreateBranch(username, repo, branchName, defaultBranch)
+	if err != nil {
+		// Branch might already exist, that's okay
+		fmt.Printf("  Branch already exists or created\n")
+	}
+
+	// Step 4: Upload ZIP file
+	zipFilePath := fmt.Sprintf("tools/%ss/%s.zip", tool.Type, tool.Name)
+	fmt.Printf("  Uploading: %s\n", zipFilePath)
+
+	err = ps.githubClient.UploadFile(
+		username,
+		repo,
+		zipFilePath,
+		branchName,
+		zipData,
+		fmt.Sprintf("Add %s v%s", tool.Name, tool.Version),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to upload ZIP file: %w", err)
+	}
+
+	// Step 5: Update or create registry.json
+	fmt.Printf("  Updating registry.json\n")
+
+	// Try to fetch current registry.json
+	var registry models.Registry
+	registryData, err := ps.githubClient.FetchFile("registry.json")
+	if err != nil {
+		// registry.json doesn't exist, create a new one
+		fmt.Printf("  Creating new registry.json\n")
+		registry = models.Registry{
+			Version:   "1.0.0",
+			UpdatedAt: time.Now(),
+			Tools:     make(map[models.ToolType][]*models.ToolInfo),
+		}
+	} else {
+		// registry.json exists, parse it
+		if err := json.Unmarshal(registryData, &registry); err != nil {
+			return fmt.Errorf("failed to parse registry.json: %w", err)
+		}
+	}
+
+	// Add or update tool in registry
+	tool.File = zipFilePath
+	tool.UpdatedAt = time.Now()
+
+	// Initialize tools map if needed
+	if registry.Tools == nil {
+		registry.Tools = make(map[models.ToolType][]*models.ToolInfo)
+	}
+
+	// Get tools of this type
+	toolsOfType := registry.Tools[tool.Type]
+
+	// Check if tool already exists
+	found := false
+	for i, t := range toolsOfType {
+		if t.Name == tool.Name {
+			toolsOfType[i] = tool
+			found = true
+			break
+		}
+	}
+
+	// If not found, add it
+	if !found {
+		tool.CreatedAt = time.Now()
+		toolsOfType = append(toolsOfType, tool)
+	}
+
+	// Update the map
+	registry.Tools[tool.Type] = toolsOfType
+	registry.UpdatedAt = time.Now()
+
+	// Marshal updated registry
+	updatedRegistryData, err := json.MarshalIndent(registry, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal registry.json: %w", err)
+	}
+
+	// Upload updated registry.json
+	err = ps.githubClient.UploadFile(
+		username,
+		repo,
+		"registry.json",
+		branchName,
+		updatedRegistryData,
+		fmt.Sprintf("Update registry for %s v%s", tool.Name, tool.Version),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update registry.json: %w", err)
+	}
+
+	// Step 6: Create pull request
+	fmt.Printf("  Creating pull request\n")
+
+	prTitle := fmt.Sprintf("Publish %s v%s", tool.Name, tool.Version)
+	prBody := fmt.Sprintf(`## Tool Publication
+
+**Name:** %s
+**Version:** %s
+**Type:** %s
+**Author:** %s
+
+**Description:** %s
+
+**File:** %s
+**Size:** %d bytes
+**Hash:** %s
+
+---
+*This PR was automatically generated by cntm*
+`, tool.Name, tool.Version, tool.Type, tool.Author, tool.Description, zipFilePath, tool.Size, hash)
+
+	headBranch := fmt.Sprintf("%s:%s", username, branchName)
+	pr, err := ps.githubClient.CreatePullRequest(owner, repo, prTitle, prBody, headBranch, defaultBranch)
+	if err != nil {
+		return fmt.Errorf("failed to create pull request: %w", err)
+	}
+
+	fmt.Printf("\n✓ Pull request created: %s\n", pr.GetHTMLURL())
 
 	return nil
 }
