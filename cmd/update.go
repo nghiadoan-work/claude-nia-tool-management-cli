@@ -27,21 +27,23 @@ var updateCmd = &cobra.Command{
 By default, this command will prompt for confirmation before updating.
 Use --yes to skip the confirmation prompt.
 
+If no arguments are provided, the command will run in interactive mode
+and guide you through selecting tools to update.
+
 Examples:
+  cntm update                        # Interactive mode
   cntm update code-reviewer          # Update specific tool
   cntm update --all                  # Update all outdated tools
   cntm update --all --yes            # Update all without confirmation`,
-	Example: `  cntm update code-reviewer          # Update specific tool
+	Example: `  cntm update                        # Interactive mode
+  cntm update code-reviewer          # Update specific tool
   cntm update --all                  # Update all outdated tools
   cntm update --all --yes            # Update all without confirmation
   cntm update code-reviewer --yes    # Update without confirmation`,
 	Args: func(cmd *cobra.Command, args []string) error {
-		// Either provide a tool name or use --all
+		// Either provide a tool name, use --all, or run interactive
 		if updateAll && len(args) > 0 {
 			return fmt.Errorf("cannot specify tool name with --all flag")
-		}
-		if !updateAll && len(args) == 0 {
-			return fmt.Errorf("requires a tool name or --all flag")
 		}
 		return nil
 	},
@@ -120,6 +122,11 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	// Execute update
 	if updateAll {
 		return runUpdateAll(updater)
+	}
+
+	// Interactive mode if no arguments
+	if len(args) == 0 {
+		return runUpdateInteractive(updater)
 	}
 
 	// Update specific tool
@@ -266,4 +273,56 @@ func runUpdateAll(updater *services.UpdaterService) error {
 	}
 
 	return nil
+}
+
+// runUpdateInteractive presents an interactive menu for selecting tools to update
+func runUpdateInteractive(updater *services.UpdaterService) error {
+	fmt.Println()
+	ui.PrintHeader("Interactive Tool Update")
+	fmt.Println()
+
+	// Check for outdated tools
+	ui.PrintInfo("Checking for outdated tools...")
+	outdated, err := updater.CheckOutdated()
+	if err != nil {
+		return ui.NewNetworkError("checking for updates", err)
+	}
+
+	if len(outdated) == 0 {
+		ui.PrintSuccess("All tools are up-to-date!")
+		return nil
+	}
+
+	fmt.Println()
+	ui.PrintInfo("Found %d outdated tool(s)", len(outdated))
+	fmt.Println()
+
+	// Create selection options
+	options := make([]string, len(outdated)+1)
+	options[0] = fmt.Sprintf("Update all %d tools", len(outdated))
+
+	for i, tool := range outdated {
+		options[i+1] = fmt.Sprintf("%-20s  %s → %s",
+			tool.Name,
+			tool.CurrentVersion,
+			tool.LatestVersion)
+	}
+
+	// Let user select
+	selectedIdx, err := ui.SelectWithArrows("Select what to update", options)
+	if err != nil {
+		return fmt.Errorf("selection cancelled")
+	}
+
+	fmt.Println()
+
+	// Handle selection
+	if selectedIdx == 0 {
+		// Update all
+		return runUpdateAll(updater)
+	}
+
+	// Update specific tool
+	selectedTool := outdated[selectedIdx-1]
+	return runUpdateSingle(updater, selectedTool.Name)
 }

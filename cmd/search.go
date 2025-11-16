@@ -148,7 +148,7 @@ func displayToolsTable(tools []*models.ToolInfo) error {
 		rows = append(rows, []string{
 			tool.Name,
 			string(tool.Type),
-			tool.Version,
+			tool.LatestVersion,
 			tool.Author,
 			fmt.Sprintf("%d", tool.Downloads),
 			description,

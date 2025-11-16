@@ -25,18 +25,26 @@ func (t ToolType) Validate() error {
 }
 
 // ToolInfo represents a tool in the registry
+// VersionInfo represents a specific version of a tool
+type VersionInfo struct {
+	File      string    `json:"file"`               // Path to ZIP file
+	Size      int64     `json:"size"`               // Size in bytes
+	CreatedAt time.Time `json:"created_at"`         // When this version was created
+	Changelog string    `json:"changelog,omitempty"` // Changelog for this version
+}
+
+// ToolInfo represents a tool with all its versions
 type ToolInfo struct {
-	Name        string    `json:"name"`
-	Version     string    `json:"version"`
-	Description string    `json:"description"`
-	Type        ToolType  `json:"type"`
-	Author      string    `json:"author"`
-	Tags        []string  `json:"tags"`
-	File        string    `json:"file"`      // Path in repo to ZIP file
-	Size        int64     `json:"size"`      // Size in bytes
-	Downloads   int       `json:"downloads"` // Download count
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	Name          string                  `json:"name"`
+	LatestVersion string                  `json:"latest_version"` // Points to latest version
+	Description   string                  `json:"description"`
+	Type          ToolType                `json:"type"`
+	Author        string                  `json:"author"`
+	Tags          []string                `json:"tags"`
+	Downloads     int                     `json:"downloads"`      // Total download count
+	CreatedAt     time.Time               `json:"created_at"`     // When tool was first published
+	UpdatedAt     time.Time               `json:"updated_at"`     // When tool was last updated
+	Versions      map[string]*VersionInfo `json:"versions"`       // version -> version info
 }
 
 // Validate checks if ToolInfo is valid
@@ -44,16 +52,50 @@ func (t *ToolInfo) Validate() error {
 	if t.Name == "" {
 		return fmt.Errorf("tool name cannot be empty")
 	}
-	if t.Version == "" {
-		return fmt.Errorf("tool version cannot be empty")
+	if t.LatestVersion == "" {
+		return fmt.Errorf("tool latest_version cannot be empty")
 	}
 	if err := t.Type.Validate(); err != nil {
 		return err
 	}
-	if t.File == "" {
-		return fmt.Errorf("tool file path cannot be empty")
+	if t.Versions == nil || len(t.Versions) == 0 {
+		return fmt.Errorf("tool must have at least one version")
+	}
+	// Check that latest_version exists in versions map
+	if _, exists := t.Versions[t.LatestVersion]; !exists {
+		return fmt.Errorf("latest_version %s not found in versions map", t.LatestVersion)
 	}
 	return nil
+}
+
+// GetVersion returns the VersionInfo for a specific version, or latest if version is empty
+func (t *ToolInfo) GetVersion(version string) (*VersionInfo, error) {
+	if version == "" {
+		version = t.LatestVersion
+	}
+	versionInfo, exists := t.Versions[version]
+	if !exists {
+		return nil, fmt.Errorf("version %s not found for tool %s", version, t.Name)
+	}
+	return versionInfo, nil
+}
+
+// GetVersionFile returns the file path for a specific version
+func (t *ToolInfo) GetVersionFile(version string) (string, error) {
+	vInfo, err := t.GetVersion(version)
+	if err != nil {
+		return "", err
+	}
+	return vInfo.File, nil
+}
+
+// ListVersions returns a sorted list of all available versions
+func (t *ToolInfo) ListVersions() []string {
+	versions := make([]string, 0, len(t.Versions))
+	for v := range t.Versions {
+		versions = append(versions, v)
+	}
+	return versions
 }
 
 // Registry represents the registry.json structure from GitHub

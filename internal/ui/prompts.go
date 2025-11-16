@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/manifoldco/promptui"
 )
 
 // Confirm prompts the user for yes/no confirmation
@@ -121,4 +123,27 @@ func ConfirmBulkOperation(operation string, items []string) bool {
 
 	fmt.Println()
 	return Confirm(fmt.Sprintf("Are you sure you want to %s %d item(s)?", operation, len(items)))
+}
+
+// SelectWithArrows prompts the user to select from a list using arrow keys
+// Returns the selected index and value, or -1 if cancelled
+func SelectWithArrows(label string, items []string) (int, error) {
+	prompt := promptui.Select{
+		Label: label,
+		Items: items,
+		Size:  10, // Show up to 10 items at a time
+		Templates: &promptui.SelectTemplates{
+			Label:    "{{ . | cyan }}",
+			Active:   "▸ {{ . | green }}",
+			Inactive: "  {{ . }}",
+			Selected: "{{ \"✓\" | green }} {{ . }}",
+		},
+	}
+
+	index, _, err := prompt.Run()
+	if err != nil {
+		return -1, err
+	}
+
+	return index, nil
 }

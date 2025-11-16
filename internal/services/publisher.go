@@ -75,10 +75,10 @@ func (ps *PublisherService) ValidateTool(toolPath string) error {
 		return fmt.Errorf("tool path is not a directory: %s", toolPath)
 	}
 
-	// Check for README.md
+	// Check for README.md (optional, but recommended)
 	readmePath := filepath.Join(toolPath, "README.md")
 	if _, err := os.Stat(readmePath); os.IsNotExist(err) {
-		return fmt.Errorf("README.md not found in tool directory")
+		fmt.Printf("Warning: README.md not found (recommended for documentation)\n")
 	}
 
 	// Determine tool type from path
@@ -185,11 +185,17 @@ func (ps *PublisherService) GenerateMetadata(toolPath string, meta *PublishMetad
 	if meta.Version == "" {
 		return fmt.Errorf("tool version cannot be empty")
 	}
+
+	// Generate default author if empty
 	if meta.Author == "" {
-		return fmt.Errorf("tool author cannot be empty")
+		meta.Author = "Anonymous"
+		fmt.Printf("Info: Generated default author: %s\n", meta.Author)
 	}
+
+	// Generate default description if empty
 	if meta.Description == "" {
-		return fmt.Errorf("tool description cannot be empty")
+		meta.Description = fmt.Sprintf("A %s tool for Claude Code", meta.Type)
+		fmt.Printf("Info: Generated default description: %s\n", meta.Description)
 	}
 
 	// Create ToolMetadata
@@ -294,39 +300,57 @@ func (ps *PublisherService) PublishToRegistry(toolPath, version string) error {
 	// Convert version to filename format (1.0.0 -> v1-0-0)
 	versionFileName := versionToFileName(version)
 
-	toolInfo := &models.ToolInfo{
-		Name:      toolName,
-		Version:   version,
-		Type:      toolType,
-		File:      fmt.Sprintf("tools/%ss/%s/%s.zip", toolType, toolName, versionFileName),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	// Load metadata if exists
-	metadataPath := filepath.Join(toolPath, "metadata.json")
-	if data, err := os.ReadFile(metadataPath); err == nil {
-		var metadata models.ToolMetadata
-		if err := json.Unmarshal(data, &metadata); err == nil {
-			toolInfo.Author = metadata.Author
-			toolInfo.Description = metadata.Description
-			toolInfo.Tags = metadata.Tags
-		}
-	}
-
 	// Get ZIP file size
 	zipInfo, err := os.Stat(zipPath)
 	if err != nil {
 		return fmt.Errorf("failed to stat ZIP file: %w", err)
 	}
-	toolInfo.Size = zipInfo.Size()
+
+	// Create VersionInfo for this specific version
+	versionInfo := &models.VersionInfo{
+		File:      fmt.Sprintf("tools/%ss/%s/%s.zip", toolType, toolName, versionFileName),
+		Size:      zipInfo.Size(),
+		CreatedAt: time.Now(),
+	}
+
+	// Load metadata if exists
+	metadataPath := filepath.Join(toolPath, "metadata.json")
+	var toolAuthor, toolDescription string
+	var toolTags []string
+	if data, err := os.ReadFile(metadataPath); err == nil {
+		var metadata models.ToolMetadata
+		if err := json.Unmarshal(data, &metadata); err == nil {
+			toolAuthor = metadata.Author
+			toolDescription = metadata.Description
+			toolTags = metadata.Tags
+			// Add changelog for this version if available
+			if changelog, ok := metadata.Changelog[version]; ok {
+				versionInfo.Changelog = changelog
+			}
+		}
+	}
+
+	// Create ToolInfo structure (will be used for registry update)
+	toolInfo := &models.ToolInfo{
+		Name:          toolName,
+		LatestVersion: version,
+		Type:          toolType,
+		Author:        toolAuthor,
+		Description:   toolDescription,
+		Tags:          toolTags,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+		Versions: map[string]*models.VersionInfo{
+			version: versionInfo,
+		},
+	}
 
 	// Print package info
 	fmt.Printf("\nTool packaged successfully!\n")
 	fmt.Printf("  Tool:    %s\n", toolName)
 	fmt.Printf("  Type:    %s\n", toolType)
 	fmt.Printf("  Version: %s\n", version)
-	fmt.Printf("  Size:    %d bytes\n", toolInfo.Size)
+	fmt.Printf("  Size:    %d bytes\n", versionInfo.Size)
 	fmt.Printf("  Hash:    %s\n", hash)
 	fmt.Printf("  Package: %s\n", zipPath)
 
@@ -409,7 +433,7 @@ Get a token from: https://github.com/settings/tokens (needs 'repo' scope)`)
 	}
 
 	// Step 3: Create a new branch
-	branchName := fmt.Sprintf("publish-%s-%s", tool.Name, tool.Version)
+	branchName := fmt.Sprintf("publish-%s-%s", tool.Name, tool.LatestVersion)
 	fmt.Printf("  Creating branch: %s\n", branchName)
 
 	err = ps.githubClient.CreateBranch(username, repo, branchName, defaultBranch)
@@ -419,7 +443,7 @@ Get a token from: https://github.com/settings/tokens (needs 'repo' scope)`)
 	}
 
 	// Step 4: Upload ZIP file with versioned path
-	versionFileName := versionToFileName(tool.Version)
+	versionFileName := versionToFileName(tool.LatestVersion)
 	zipFilePath := fmt.Sprintf("tools/%ss/%s/%s.zip", tool.Type, tool.Name, versionFileName)
 	fmt.Printf("  Uploading: %s\n", zipFilePath)
 
@@ -429,7 +453,7 @@ Get a token from: https://github.com/settings/tokens (needs 'repo' scope)`)
 		zipFilePath,
 		branchName,
 		zipData,
-		fmt.Sprintf("Add %s v%s", tool.Name, tool.Version),
+		fmt.Sprintf("Add %s v%s", tool.Name, tool.LatestVersion),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to upload ZIP file: %w", err)
@@ -456,10 +480,6 @@ Get a token from: https://github.com/settings/tokens (needs 'repo' scope)`)
 		}
 	}
 
-	// Add or update tool in registry
-	tool.File = zipFilePath
-	tool.UpdatedAt = time.Now()
-
 	// Initialize tools map if needed
 	if registry.Tools == nil {
 		registry.Tools = make(map[models.ToolType][]*models.ToolInfo)
@@ -470,15 +490,32 @@ Get a token from: https://github.com/settings/tokens (needs 'repo' scope)`)
 
 	// Check if tool already exists
 	found := false
-	for i, t := range toolsOfType {
-		if t.Name == tool.Name {
-			toolsOfType[i] = tool
+	for i, existingTool := range toolsOfType {
+		if existingTool.Name == tool.Name {
+			// Tool exists - append the new version to its versions map
+			if existingTool.Versions == nil {
+				existingTool.Versions = make(map[string]*models.VersionInfo)
+			}
+
+			// Add the new version
+			existingTool.Versions[tool.LatestVersion] = tool.Versions[tool.LatestVersion]
+
+			// Update latest_version to the new version
+			existingTool.LatestVersion = tool.LatestVersion
+
+			// Update metadata (in case description, author, tags changed)
+			existingTool.Description = tool.Description
+			existingTool.Author = tool.Author
+			existingTool.Tags = tool.Tags
+			existingTool.UpdatedAt = time.Now()
+
+			toolsOfType[i] = existingTool
 			found = true
 			break
 		}
 	}
 
-	// If not found, add it
+	// If not found, add it as a new tool
 	if !found {
 		tool.CreatedAt = time.Now()
 		toolsOfType = append(toolsOfType, tool)
@@ -501,7 +538,7 @@ Get a token from: https://github.com/settings/tokens (needs 'repo' scope)`)
 		"registry.json",
 		branchName,
 		updatedRegistryData,
-		fmt.Sprintf("Update registry for %s v%s", tool.Name, tool.Version),
+		fmt.Sprintf("Update registry for %s v%s", tool.Name, tool.LatestVersion),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to update registry.json: %w", err)
@@ -510,7 +547,7 @@ Get a token from: https://github.com/settings/tokens (needs 'repo' scope)`)
 	// Step 6: Create pull request
 	fmt.Printf("  Creating pull request\n")
 
-	prTitle := fmt.Sprintf("Publish %s v%s", tool.Name, tool.Version)
+	prTitle := fmt.Sprintf("Publish %s v%s", tool.Name, tool.LatestVersion)
 	prBody := fmt.Sprintf(`## Tool Publication
 
 **Name:** %s
@@ -526,7 +563,7 @@ Get a token from: https://github.com/settings/tokens (needs 'repo' scope)`)
 
 ---
 *This PR was automatically generated by cntm*
-`, tool.Name, tool.Version, tool.Type, tool.Author, tool.Description, zipFilePath, tool.Size, hash)
+`, tool.Name, tool.LatestVersion, tool.Type, tool.Author, tool.Description, zipFilePath, tool.Versions[tool.LatestVersion].Size, hash)
 
 	headBranch := fmt.Sprintf("%s:%s", username, branchName)
 	pr, err := ps.githubClient.CreatePullRequest(owner, repo, prTitle, prBody, headBranch, defaultBranch)

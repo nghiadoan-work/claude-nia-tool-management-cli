@@ -87,13 +87,13 @@ func (us *UpdaterService) CheckOutdated() ([]OutdatedTool, error) {
 		}
 
 		// Compare versions
-		cmp := us.CompareVersions(installedTool.Version, latestTool.Version)
+		cmp := us.CompareVersions(installedTool.Version, latestTool.LatestVersion)
 		if cmp < 0 {
 			// Current version is older than latest
 			outdated = append(outdated, OutdatedTool{
 				Name:           name,
 				CurrentVersion: installedTool.Version,
-				LatestVersion:  latestTool.Version,
+				LatestVersion:  latestTool.LatestVersion,
 				Type:           installedTool.Type,
 			})
 		}
@@ -128,10 +128,10 @@ func (us *UpdaterService) Update(toolName string) (*UpdateResult, error) {
 		result.Success = false
 		return result, result.Error
 	}
-	result.NewVersion = latestTool.Version
+	result.NewVersion = latestTool.LatestVersion
 
 	// Step 3: Compare versions
-	cmp := us.CompareVersions(installedTool.Version, latestTool.Version)
+	cmp := us.CompareVersions(installedTool.Version, latestTool.LatestVersion)
 	if cmp >= 0 {
 		// Already up-to-date or newer
 		result.Skipped = true
@@ -142,7 +142,7 @@ func (us *UpdaterService) Update(toolName string) (*UpdateResult, error) {
 
 	// Step 4: Use InstallerService to install the new version
 	// The installer will handle backing up, extracting, and updating the lock file
-	if err := us.installerService.InstallWithVersion(toolName, latestTool.Version); err != nil {
+	if err := us.installerService.InstallWithVersion(toolName, latestTool.LatestVersion); err != nil {
 		result.Error = fmt.Errorf("update failed: %w", err)
 		result.Success = false
 		return result, result.Error
@@ -225,7 +225,7 @@ func (us *UpdaterService) IsOutdated(toolName string) (bool, error) {
 	}
 
 	// Compare versions
-	cmp := us.CompareVersions(installedTool.Version, latestTool.Version)
+	cmp := us.CompareVersions(installedTool.Version, latestTool.LatestVersion)
 	return cmp < 0, nil
 }
 
@@ -261,5 +261,5 @@ func (us *UpdaterService) GetLatestVersion(toolName string) (string, error) {
 		return "", fmt.Errorf("tool not found in registry: %w", err)
 	}
 
-	return latestTool.Version, nil
+	return latestTool.LatestVersion, nil
 }

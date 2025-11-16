@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/config"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/services"
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/ui"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"github.com/spf13/cobra"
 )
@@ -268,17 +268,10 @@ func runPublish(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  Type:    %s\n", string(toolType))
 		fmt.Printf("  Version: %s\n", version)
 		fmt.Printf("  Author:  %s\n", publishMeta.Author)
-		fmt.Print("\nContinue? (y/n): ")
+		fmt.Println()
 
-		reader := bufio.NewReader(os.Stdin)
-		input, err := reader.ReadString('\n')
-		if err != nil {
-			return fmt.Errorf("failed to read input: %w", err)
-		}
-
-		input = strings.TrimSpace(strings.ToLower(input))
-		if input != "y" && input != "yes" {
-			fmt.Println("Publication cancelled")
+		if !ui.Confirm("Continue with publication?") {
+			ui.PrintWarning("Publication cancelled")
 			return nil
 		}
 	}
@@ -421,81 +414,58 @@ func selectToolInteractively(tools []toolInfo) (*toolInfo, error) {
 		return nil, fmt.Errorf("no tools found in local directories")
 	}
 
-	fmt.Println("\nAvailable tools to publish:")
+	fmt.Println()
+	ui.PrintHeader("Interactive Tool Publishing")
 	fmt.Println()
 
-	// Group by type for better display
-	agentTools := []toolInfo{}
-	commandTools := []toolInfo{}
-	skillTools := []toolInfo{}
-
-	for _, tool := range tools {
-		switch tool.Type {
-		case models.ToolTypeAgent:
-			agentTools = append(agentTools, tool)
-		case models.ToolTypeCommand:
-			commandTools = append(commandTools, tool)
-		case models.ToolTypeSkill:
-			skillTools = append(skillTools, tool)
-		}
+	// Step 1: Select tool type
+	ui.PrintInfo("Step 1: Select tool type")
+	typeOptions := []string{
+		"agent   - AI agents for specialized tasks",
+		"command - Command-line tools and workflows",
+		"skill   - Reusable skills and capabilities",
 	}
 
-	// Display tools with numbers
-	index := 1
-	toolMap := make(map[int]toolInfo)
-
-	if len(agentTools) > 0 {
-		fmt.Println("Agents:")
-		for _, tool := range agentTools {
-			fmt.Printf("  %d) %s\n", index, tool.Name)
-			toolMap[index] = tool
-			index++
-		}
-		fmt.Println()
-	}
-
-	if len(commandTools) > 0 {
-		fmt.Println("Commands:")
-		for _, tool := range commandTools {
-			fmt.Printf("  %d) %s\n", index, tool.Name)
-			toolMap[index] = tool
-			index++
-		}
-		fmt.Println()
-	}
-
-	if len(skillTools) > 0 {
-		fmt.Println("Skills:")
-		for _, tool := range skillTools {
-			fmt.Printf("  %d) %s\n", index, tool.Name)
-			toolMap[index] = tool
-			index++
-		}
-		fmt.Println()
-	}
-
-	// Prompt for selection
-	fmt.Printf("Select tool to publish (1-%d): ", len(tools))
-
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
+	typeIdx, err := ui.SelectWithArrows("Select tool type", typeOptions)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read input: %w", err)
+		return nil, fmt.Errorf("type selection cancelled")
 	}
 
-	input = strings.TrimSpace(input)
-
-	// Parse selection
-	var selection int
-	if _, err := fmt.Sscanf(input, "%d", &selection); err != nil {
-		return nil, fmt.Errorf("invalid selection: %s", input)
+	var selectedType models.ToolType
+	switch typeIdx {
+	case 0:
+		selectedType = models.ToolTypeAgent
+	case 1:
+		selectedType = models.ToolTypeCommand
+	case 2:
+		selectedType = models.ToolTypeSkill
 	}
 
-	// Validate selection
-	selectedTool, exists := toolMap[selection]
-	if !exists {
-		return nil, fmt.Errorf("invalid selection: %d (must be between 1 and %d)", selection, len(tools))
+	fmt.Println()
+
+	// Step 2: Filter tools by selected type
+	ui.PrintInfo("Step 2: Select tool")
+	filteredTools := []toolInfo{}
+	for _, tool := range tools {
+		if tool.Type == selectedType {
+			filteredTools = append(filteredTools, tool)
+		}
 	}
 
-	return &selectedTool, nil
+	if len(filteredTools) == 0 {
+		return nil, fmt.Errorf("no %s tools found in local directories", selectedType)
+	}
+
+	// Create display options for filtered tools
+	options := make([]string, len(filteredTools))
+	for i, tool := range filteredTools {
+		options[i] = tool.Name
+	}
+
+	selectedIdx, err := ui.SelectWithArrows(fmt.Sprintf("Select %s to publish", selectedType), options)
+	if err != nil {
+		return nil, fmt.Errorf("tool selection cancelled")
+	}
+
+	return &filteredTools[selectedIdx], nil
 }

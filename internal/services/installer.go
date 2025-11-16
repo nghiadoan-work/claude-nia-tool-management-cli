@@ -125,29 +125,37 @@ func (ins *InstallerService) InstallWithVersion(toolName, version string) error 
 		return fmt.Errorf("failed to find tool: %w\nHint: Run 'cntm search %s' to verify the tool exists", err, toolName)
 	}
 
-	// If version specified, validate it matches
-	if version != "" && tool.Version != version {
-		return fmt.Errorf("requested version %s not found, registry has version %s", version, tool.Version)
+	// Step 2: Determine which version to install
+	versionToInstall := version
+	if versionToInstall == "" {
+		versionToInstall = tool.LatestVersion
 	}
 
-	// Step 2: Check if already installed with same version
+	// Validate that the requested version exists
+	versionInfo, err := tool.GetVersion(versionToInstall)
+	if err != nil {
+		return fmt.Errorf("version %s not found for tool %s\nAvailable versions: %v",
+			versionToInstall, toolName, tool.ListVersions())
+	}
+
+	// Step 3: Check if already installed with same version
 	installedTool, err := ins.lockFileService.GetTool(toolName)
 	if err == nil && installedTool != nil {
-		if installedTool.Version == tool.Version {
-			fmt.Printf("Tool %s@%s is already installed, skipping\n", toolName, tool.Version)
+		if installedTool.Version == versionToInstall {
+			fmt.Printf("Tool %s@%s is already installed, skipping\n", toolName, versionToInstall)
 			return nil
 		}
-		fmt.Printf("Updating %s from %s to %s\n", toolName, installedTool.Version, tool.Version)
+		fmt.Printf("Updating %s from %s to %s\n", toolName, installedTool.Version, versionToInstall)
 	} else {
-		fmt.Printf("Installing %s@%s\n", toolName, tool.Version)
+		fmt.Printf("Installing %s@%s\n", toolName, versionToInstall)
 	}
 
-	// Step 3: Install the tool
-	if err := ins.installTool(tool); err != nil {
+	// Step 4: Install the tool
+	if err := ins.installToolWithVersion(tool, versionToInstall, versionInfo); err != nil {
 		return fmt.Errorf("failed to install tool: %w", err)
 	}
 
-	fmt.Printf("Successfully installed %s@%s\n", toolName, tool.Version)
+	fmt.Printf("Successfully installed %s@%s\n", toolName, versionToInstall)
 	return nil
 }
 
@@ -259,8 +267,8 @@ func (ins *InstallerService) findTool(toolName string) (*models.ToolInfo, error)
 	return nil, fmt.Errorf("tool %s not found in registry", toolName)
 }
 
-// installTool performs the actual installation of a tool
-func (ins *InstallerService) installTool(tool *models.ToolInfo) error {
+// installToolWithVersion performs the actual installation of a tool with a specific version
+func (ins *InstallerService) installToolWithVersion(tool *models.ToolInfo, version string, versionInfo *models.VersionInfo) error {
 	// Create a temporary directory for download
 	tempDir, err := os.MkdirTemp("", "cntm-install-*")
 	if err != nil {
@@ -270,13 +278,13 @@ func (ins *InstallerService) installTool(tool *models.ToolInfo) error {
 
 	// Step 1: Download the ZIP file
 	zipPath := filepath.Join(tempDir, tool.Name+".zip")
-	if err := ins.downloadTool(tool, zipPath); err != nil {
+	if err := ins.downloadToolVersion(tool.Name, versionInfo, zipPath); err != nil {
 		return fmt.Errorf("failed to download tool: %w", err)
 	}
 
 	// Step 2: Verify integrity if hash is available
-	if tool.File != "" {
-		// Note: The registry doesn't currently include SHA256 hashes in ToolInfo
+	if versionInfo.File != "" {
+		// Note: The registry doesn't currently include SHA256 hashes in VersionInfo
 		// We calculate it after download for storage in lock file
 	}
 
@@ -316,7 +324,7 @@ func (ins *InstallerService) installTool(tool *models.ToolInfo) error {
 
 	// Step 6: Update lock file
 	installedTool := &models.InstalledTool{
-		Version:     tool.Version,
+		Version:     version,
 		Type:        tool.Type,
 		InstalledAt: time.Now(),
 		Source:      "registry",
@@ -341,21 +349,21 @@ func (ins *InstallerService) installTool(tool *models.ToolInfo) error {
 	return nil
 }
 
-// downloadTool downloads a tool's ZIP file from GitHub
-func (ins *InstallerService) downloadTool(tool *models.ToolInfo, destPath string) error {
+// downloadToolVersion downloads a specific version of a tool's ZIP file from GitHub
+func (ins *InstallerService) downloadToolVersion(toolName string, versionInfo *models.VersionInfo, destPath string) error {
 	// Construct the raw GitHub URL for the file
 	// Format: https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}
 	// But we need to use the GitHub API's download URL instead
 
-	// The tool.File contains the path like "tools/agents/code-reviewer.zip"
+	// The versionInfo.File contains the path like "tools/commands/go-code-reviewer/v1-0-2.zip"
 	// We need to get the download URL from GitHub
 
-	fmt.Printf("Downloading %s (%s)...\n", tool.Name, formatBytes(tool.Size))
+	fmt.Printf("Downloading %s (%s)...\n", toolName, formatBytes(versionInfo.Size))
 
 	// Download file with progress bar
 	data, err := ins.githubClient.DownloadFile(
-		ins.buildDownloadURL(tool.File),
-		tool.Size,
+		ins.buildDownloadURL(versionInfo.File),
+		versionInfo.Size,
 		true, // Show progress
 	)
 	if err != nil {

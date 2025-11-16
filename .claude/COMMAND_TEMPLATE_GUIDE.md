@@ -6,7 +6,7 @@ This guide explains the command workflow structure for managing tasks through sp
 
 The command workflow consists of three phases:
 
-1. **Spec** - Specify and scope the task
+1. **Append** - Add tasks to the checklist
 2. **Apply** - Execute the task checklist
 3. **Archive** - Move completed tasks to archive
 
@@ -15,13 +15,13 @@ The command workflow consists of three phases:
 ### Command Directory
 ```
 .claude/commands/{command-name}/
-├── spec.md              # Task specification command
+├── append.md            # Add tasks to checklist
 ├── apply.md             # Task execution command
 ├── archive.md           # Task archival command
 └── TEMPLATE_GUIDE.md
 ```
 
-### Working Directory (Created by spec.md)
+### Working Directory (Created by append.md)
 ```
 {command-name}-progress/
 ├── active-task-1.md
@@ -36,23 +36,23 @@ The command workflow consists of three phases:
 
 ---
 
-## 1. spec.md - Task Specification Command
+## 1. append.md - Add Tasks to Checklist
 
-**Purpose**: Define and break down tasks into actionable checklist items.
+**Purpose**: Add new tasks to the checklist with detailed breakdown.
 
 ### Template Structure
 
 ```markdown
 ---
-name: {command-name}-spec
-description: Specify and scope {task-type} tasks into a detailed checklist
+name: {command-name}-append
+description: Add {task-type} tasks to the checklist with detailed breakdown
 ---
 
-# {Command Name} - Task Specification
+# {Command Name} - Add Tasks
 
 ## Usage
 
-Create a detailed task specification and checklist for {task-type}.
+Add a new task with detailed checklist items for {task-type}.
 
 ## Command Behavior
 
@@ -90,7 +90,7 @@ When invoked, this command will:
 
 \```bash
 # User request
-"Spec: Implement user authentication feature"
+"Append: Implement user authentication feature"
 
 # Command generates
 go-code-reviewer-progress/
@@ -283,12 +283,12 @@ The INDEX.md maintains a searchable list:
 
 ## Complete Workflow Example
 
-### Phase 1: Specification
+### Phase 1: Append Task
 
 \```bash
 User: "I need to implement a code review workflow"
 
-Command: spec.md
+Command: append.md
 Output: go-code-reviewer-progress/code-review-workflow.md
 
 # Task: Code Review Workflow
@@ -346,7 +346,7 @@ Actions:
 
 ## Best Practices
 
-### For spec.md
+### For append.md
 - ✅ Break tasks into 3-10 actionable items
 - ✅ Use clear, specific language
 - ✅ Include context and dependencies
@@ -409,8 +409,8 @@ Adapt this template for specific use cases:
 
 | Command | Purpose | Input | Output |
 |---------|---------|-------|--------|
-| spec.md | Create task checklist | Task description | {command-name}-progress/{name}.md |
+| append.md | Add task to checklist | Task description | {command-name}-progress/{name}.md |
 | apply.md | Execute & track progress | Task name | Updated task file |
 | archive.md | Move completed task | Task name | {command-name}-progress/archived/YYYY-MM/{name}.md |
 
-This workflow provides a systematic approach to task management through clear phases of specification, execution, and archival.
+This workflow provides a systematic approach to task management through clear phases of appending tasks, execution, and archival.

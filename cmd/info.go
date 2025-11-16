@@ -134,7 +134,7 @@ func findToolByName(registryService *services.RegistryService, name string) (*mo
 func displayToolInfo(tool *models.ToolInfo) error {
 	fmt.Println()
 	fmt.Printf("  Name:        %s\n", tool.Name)
-	fmt.Printf("  Version:     %s\n", tool.Version)
+	fmt.Printf("  Version:     %s (latest)\n", tool.LatestVersion)
 	fmt.Printf("  Type:        %s\n", tool.Type)
 	fmt.Printf("  Author:      %s\n", tool.Author)
 	fmt.Println()
@@ -146,12 +146,27 @@ func displayToolInfo(tool *models.ToolInfo) error {
 	}
 
 	fmt.Printf("  Downloads:   %d\n", tool.Downloads)
-	fmt.Printf("  Size:        %s\n", formatBytes(tool.Size))
+
+	// Get latest version info
+	latestVersionInfo, err := tool.GetVersion(tool.LatestVersion)
+	if err == nil {
+		fmt.Printf("  Size:        %s\n", formatBytes(latestVersionInfo.Size))
+	}
+
 	fmt.Println()
 	fmt.Printf("  Created:     %s\n", tool.CreatedAt.Format("2006-01-02 15:04:05"))
 	fmt.Printf("  Updated:     %s\n", tool.UpdatedAt.Format("2006-01-02 15:04:05"))
 	fmt.Println()
-	fmt.Printf("  File:        %s\n", tool.File)
+
+	// Show all available versions
+	versions := tool.ListVersions()
+	if len(versions) > 0 {
+		fmt.Printf("  Available Versions: %s\n", strings.Join(versions, ", "))
+	}
+
+	if latestVersionInfo != nil {
+		fmt.Printf("  File:        %s\n", latestVersionInfo.File)
+	}
 	fmt.Println()
 
 	return nil

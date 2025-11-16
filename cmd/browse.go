@@ -194,7 +194,7 @@ func displayBrowseTable(tools []*models.ToolInfo, sortBy string) error {
 		rows = append(rows, []string{
 			tool.Name,
 			string(tool.Type),
-			tool.Version,
+			tool.LatestVersion,
 			tool.Author,
 			fmt.Sprintf("%d", tool.Downloads),
 			updatedStr,
