@@ -291,11 +291,14 @@ func (ps *PublisherService) PublishToRegistry(toolPath, version string) error {
 	}
 
 	// Step 4: Create ToolInfo for registry
+	// Convert version to filename format (1.0.0 -> v1-0-0)
+	versionFileName := versionToFileName(version)
+
 	toolInfo := &models.ToolInfo{
 		Name:      toolName,
 		Version:   version,
 		Type:      toolType,
-		File:      fmt.Sprintf("tools/%ss/%s.zip", toolType, toolName),
+		File:      fmt.Sprintf("tools/%ss/%s/%s.zip", toolType, toolName, versionFileName),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -415,8 +418,9 @@ Get a token from: https://github.com/settings/tokens (needs 'repo' scope)`)
 		fmt.Printf("  Branch already exists or created\n")
 	}
 
-	// Step 4: Upload ZIP file
-	zipFilePath := fmt.Sprintf("tools/%ss/%s.zip", tool.Type, tool.Name)
+	// Step 4: Upload ZIP file with versioned path
+	versionFileName := versionToFileName(tool.Version)
+	zipFilePath := fmt.Sprintf("tools/%ss/%s/%s.zip", tool.Type, tool.Name, versionFileName)
 	fmt.Printf("  Uploading: %s\n", zipFilePath)
 
 	err = ps.githubClient.UploadFile(
@@ -553,4 +557,19 @@ func (ps *PublisherService) ReadExistingMetadata(toolPath string) (*models.ToolM
 	}
 
 	return &metadata, nil
+}
+
+// versionToFileName converts a semantic version to a filename-safe format
+// Examples:
+//   1.0.0 -> v1-0-0
+//   2.1.3 -> v2-1-3
+//   1.0.0-beta -> v1-0-0-beta
+func versionToFileName(version string) string {
+	// Replace dots with dashes
+	fileName := strings.ReplaceAll(version, ".", "-")
+	// Add 'v' prefix if not present
+	if !strings.HasPrefix(fileName, "v") {
+		fileName = "v" + fileName
+	}
+	return fileName
 }

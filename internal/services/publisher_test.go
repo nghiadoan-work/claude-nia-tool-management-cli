@@ -484,3 +484,44 @@ func TestReadExistingMetadata(t *testing.T) {
 		})
 	}
 }
+
+func TestVersionToFileName(t *testing.T) {
+	tests := []struct {
+		name     string
+		version  string
+		expected string
+	}{
+		{
+			name:     "standard version",
+			version:  "1.0.0",
+			expected: "v1-0-0",
+		},
+		{
+			name:     "version with prefix",
+			version:  "v2.1.3",
+			expected: "v2-1-3",
+		},
+		{
+			name:     "version with prerelease",
+			version:  "1.0.0-beta",
+			expected: "v1-0-0-beta",
+		},
+		{
+			name:     "version with prerelease and metadata",
+			version:  "1.0.0-alpha.1",
+			expected: "v1-0-0-alpha-1",
+		},
+		{
+			name:     "complex version",
+			version:  "3.2.1-rc.2",
+			expected: "v3-2-1-rc-2",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := versionToFileName(tt.version)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}

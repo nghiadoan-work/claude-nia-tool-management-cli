@@ -16,9 +16,11 @@ import (
 )
 
 var publishCmd = &cobra.Command{
-	Use:   "publish [name]",
+	Use:   "publish [type] [name]",
 	Short: "Publish a tool to the registry",
 	Long: `Publish a Claude Code tool to the registry.
+
+Tool types: agent, command, skill
 
 This will:
 1. Validate the tool directory
@@ -28,11 +30,12 @@ This will:
 5. Provide instructions for creating a PR to the registry
 
 Examples:
-  cntm publish my-agent
-  cntm publish my-agent --version 1.0.0
-  cntm publish my-agent --version 1.1.0 --changelog "Added new features"
-  cntm publish my-agent --force`,
-	Args: cobra.ExactArgs(1),
+  cntm publish                      # Interactive mode - choose from available tools
+  cntm publish agent my-agent
+  cntm publish skill docker-patterns --version 1.0.0
+  cntm publish command test-runner --version 1.1.0 --changelog "Added new features"
+  cntm publish agent code-reviewer --force`,
+	Args: cobra.RangeArgs(0, 2),
 	RunE: runPublish,
 }
 
@@ -59,18 +62,64 @@ func runPublish(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	toolName := args[0]
-
-	// Determine tool path
+	var toolType models.ToolType
+	var toolName string
 	var toolPath string
-	if publishPath != "" {
-		toolPath = publishPath
-	} else {
-		// Try to find the tool in the default locations
-		toolPath = findToolPath(toolName, cfg)
-		if toolPath == "" {
-			return fmt.Errorf("tool %s not found in local directories\nHint: Use --path to specify a custom location", toolName)
+
+	// Interactive mode: no arguments provided
+	if len(args) == 0 {
+		// Scan for available tools
+		tools, err := scanLocalTools(cfg)
+		if err != nil {
+			return fmt.Errorf("failed to scan local tools: %w", err)
 		}
+
+		if len(tools) == 0 {
+			return fmt.Errorf("no tools found in %s\nCreate a tool first with: cntm create", cfg.Local.DefaultPath)
+		}
+
+		// Let user select a tool
+		selectedTool, err := selectToolInteractively(tools)
+		if err != nil {
+			return err
+		}
+
+		toolType = selectedTool.Type
+		toolName = selectedTool.Name
+		toolPath = selectedTool.Path
+
+		fmt.Printf("\nSelected: %s (%s)\n", toolName, toolType)
+	} else if len(args) == 2 {
+		// Explicit mode: type and name provided
+		toolTypeStr := strings.ToLower(args[0])
+		toolName = args[1]
+
+		// Validate tool type
+		switch toolTypeStr {
+		case "agent", "agents":
+			toolType = models.ToolTypeAgent
+		case "command", "commands":
+			toolType = models.ToolTypeCommand
+		case "skill", "skills":
+			toolType = models.ToolTypeSkill
+		default:
+			return fmt.Errorf("invalid tool type: %s\nValid types: agent, command, skill", toolTypeStr)
+		}
+
+		// Determine tool path
+		if publishPath != "" {
+			toolPath = publishPath
+		} else {
+			// Build path based on type and name
+			toolPath = filepath.Join(cfg.Local.DefaultPath, string(toolType)+"s", toolName)
+
+			// Check if tool exists
+			if _, err := os.Stat(toolPath); os.IsNotExist(err) {
+				return fmt.Errorf("tool %s not found at %s\nHint: Use --path to specify a custom location", toolName, toolPath)
+			}
+		}
+	} else {
+		return fmt.Errorf("invalid arguments\nUsage: cntm publish [type] [name] OR cntm publish (interactive)")
 	}
 
 	fmt.Printf("Publishing tool: %s\n", toolName)
@@ -163,16 +212,10 @@ func runPublish(cmd *cobra.Command, args []string) error {
 	// Step 5: Update metadata
 	fmt.Println("\nUpdating metadata...")
 
-	// Detect tool type
-	toolType, err := detectToolTypeFromPath(toolPath)
-	if err != nil {
-		return fmt.Errorf("failed to detect tool type: %w", err)
-	}
-
 	publishMeta := &services.PublishMetadata{
 		Name:    toolName,
 		Version: version,
-		Type:    models.ToolType(toolType),
+		Type:    toolType,
 	}
 
 	// Copy from existing metadata or prompt
@@ -222,7 +265,7 @@ func runPublish(cmd *cobra.Command, args []string) error {
 	if !publishForce {
 		fmt.Printf("\nReady to publish:\n")
 		fmt.Printf("  Tool:    %s\n", toolName)
-		fmt.Printf("  Type:    %s\n", toolType)
+		fmt.Printf("  Type:    %s\n", string(toolType))
 		fmt.Printf("  Version: %s\n", version)
 		fmt.Printf("  Author:  %s\n", publishMeta.Author)
 		fmt.Print("\nContinue? (y/n): ")
@@ -319,4 +362,140 @@ func bumpVersion(currentVersion string) string {
 	}
 
 	return fmt.Sprintf("%s.%s.%s", major, minor, patch)
+}
+
+// toolInfo represents information about a local tool
+type toolInfo struct {
+	Name string
+	Type models.ToolType
+	Path string
+}
+
+// scanLocalTools scans the local directories for available tools
+func scanLocalTools(cfg *models.Config) ([]toolInfo, error) {
+	baseDir := cfg.Local.DefaultPath
+	var tools []toolInfo
+
+	// Tool types to scan
+	toolTypes := []struct {
+		dir      string
+		toolType models.ToolType
+	}{
+		{"agents", models.ToolTypeAgent},
+		{"commands", models.ToolTypeCommand},
+		{"skills", models.ToolTypeSkill},
+	}
+
+	for _, tt := range toolTypes {
+		dirPath := filepath.Join(baseDir, tt.dir)
+
+		// Check if directory exists
+		if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+			continue
+		}
+
+		// Read directory entries
+		entries, err := os.ReadDir(dirPath)
+		if err != nil {
+			continue // Skip on error
+		}
+
+		// Add each subdirectory as a tool
+		for _, entry := range entries {
+			if entry.IsDir() {
+				tools = append(tools, toolInfo{
+					Name: entry.Name(),
+					Type: tt.toolType,
+					Path: filepath.Join(dirPath, entry.Name()),
+				})
+			}
+		}
+	}
+
+	return tools, nil
+}
+
+// selectToolInteractively presents a menu for selecting a tool to publish
+func selectToolInteractively(tools []toolInfo) (*toolInfo, error) {
+	if len(tools) == 0 {
+		return nil, fmt.Errorf("no tools found in local directories")
+	}
+
+	fmt.Println("\nAvailable tools to publish:")
+	fmt.Println()
+
+	// Group by type for better display
+	agentTools := []toolInfo{}
+	commandTools := []toolInfo{}
+	skillTools := []toolInfo{}
+
+	for _, tool := range tools {
+		switch tool.Type {
+		case models.ToolTypeAgent:
+			agentTools = append(agentTools, tool)
+		case models.ToolTypeCommand:
+			commandTools = append(commandTools, tool)
+		case models.ToolTypeSkill:
+			skillTools = append(skillTools, tool)
+		}
+	}
+
+	// Display tools with numbers
+	index := 1
+	toolMap := make(map[int]toolInfo)
+
+	if len(agentTools) > 0 {
+		fmt.Println("Agents:")
+		for _, tool := range agentTools {
+			fmt.Printf("  %d) %s\n", index, tool.Name)
+			toolMap[index] = tool
+			index++
+		}
+		fmt.Println()
+	}
+
+	if len(commandTools) > 0 {
+		fmt.Println("Commands:")
+		for _, tool := range commandTools {
+			fmt.Printf("  %d) %s\n", index, tool.Name)
+			toolMap[index] = tool
+			index++
+		}
+		fmt.Println()
+	}
+
+	if len(skillTools) > 0 {
+		fmt.Println("Skills:")
+		for _, tool := range skillTools {
+			fmt.Printf("  %d) %s\n", index, tool.Name)
+			toolMap[index] = tool
+			index++
+		}
+		fmt.Println()
+	}
+
+	// Prompt for selection
+	fmt.Printf("Select tool to publish (1-%d): ", len(tools))
+
+	reader := bufio.NewReader(os.Stdin)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return nil, fmt.Errorf("failed to read input: %w", err)
+	}
+
+	input = strings.TrimSpace(input)
+
+	// Parse selection
+	var selection int
+	if _, err := fmt.Sscanf(input, "%d", &selection); err != nil {
+		return nil, fmt.Errorf("invalid selection: %s", input)
+	}
+
+	// Validate selection
+	selectedTool, exists := toolMap[selection]
+	if !exists {
+		return nil, fmt.Errorf("invalid selection: %d (must be between 1 and %d)", selection, len(tools))
+	}
+
+	return &selectedTool, nil
 }

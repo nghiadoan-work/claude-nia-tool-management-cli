@@ -5,9 +5,11 @@
     "review"
   ],
   "description": "review go code base",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "changelog": {
-    "1.0.0": "Initial release"
+    "1.0.0": "Initial release",
+    "1.0.1": "Release 1.0.1",
+    "1.0.2": "Release 1.0.2"
   },
   "custom": {
     "type": "command"

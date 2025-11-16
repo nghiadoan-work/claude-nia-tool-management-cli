@@ -148,3 +148,58 @@ func TestBumpVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestScanLocalTools(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Setup test directories with various tools
+	agentPath1 := filepath.Join(tempDir, "agents", "agent1")
+	agentPath2 := filepath.Join(tempDir, "agents", "agent2")
+	commandPath := filepath.Join(tempDir, "commands", "cmd1")
+	skillPath := filepath.Join(tempDir, "skills", "skill1")
+
+	require.NoError(t, os.MkdirAll(agentPath1, 0755))
+	require.NoError(t, os.MkdirAll(agentPath2, 0755))
+	require.NoError(t, os.MkdirAll(commandPath, 0755))
+	require.NoError(t, os.MkdirAll(skillPath, 0755))
+
+	// Create a file in agents dir (should be ignored)
+	require.NoError(t, os.WriteFile(filepath.Join(tempDir, "agents", "file.txt"), []byte("test"), 0644))
+
+	// Create test config
+	testCfg := models.NewDefaultConfig()
+	testCfg.Local.DefaultPath = tempDir
+
+	// Scan tools
+	tools, err := scanLocalTools(testCfg)
+	require.NoError(t, err)
+
+	// Should find 4 tools (2 agents, 1 command, 1 skill)
+	assert.Len(t, tools, 4)
+
+	// Verify tool types
+	toolNames := make(map[string]models.ToolType)
+	for _, tool := range tools {
+		toolNames[tool.Name] = tool.Type
+	}
+
+	assert.Equal(t, models.ToolTypeAgent, toolNames["agent1"])
+	assert.Equal(t, models.ToolTypeAgent, toolNames["agent2"])
+	assert.Equal(t, models.ToolTypeCommand, toolNames["cmd1"])
+	assert.Equal(t, models.ToolTypeSkill, toolNames["skill1"])
+}
+
+func TestScanLocalTools_EmptyDirectory(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Create test config with empty directory
+	testCfg := models.NewDefaultConfig()
+	testCfg.Local.DefaultPath = tempDir
+
+	// Scan tools
+	tools, err := scanLocalTools(testCfg)
+	require.NoError(t, err)
+
+	// Should find no tools
+	assert.Len(t, tools, 0)
+}
