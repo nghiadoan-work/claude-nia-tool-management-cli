@@ -367,7 +367,7 @@ func (c *Config) Validate() error {
 func NewDefaultConfig() *Config {
 	return &Config{
 		Registry: RegistryConfig{
-			URL:    "https://github.com/nghiadoan-work/claude-tools-registry",
+			URL:    "", // User must configure registry URL
 			Branch: "main",
 		},
 		Local: LocalConfig{
