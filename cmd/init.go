@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/ui"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/pkg/models"
 	"github.com/spf13/cobra"
 )
@@ -152,14 +153,14 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	// Success message
 	fmt.Println()
-	fmt.Println("Successfully initialized Claude tools project!")
+	fmt.Println(ui.Success("✓ Successfully initialized Claude tools project!"))
 	fmt.Println()
-	fmt.Println("Next steps:")
-	fmt.Println("  1. Configure registry:  Edit .claude-tools-config.yaml and add your registry URL")
-	fmt.Println("  2. Search for tools:    cntm search <query>")
-	fmt.Println("  3. Install a tool:      cntm install <tool-name>")
-	fmt.Println("  4. Update tools:        cntm update --all")
-	fmt.Println("  5. Publish your tool:   cntm publish")
+	fmt.Println(ui.Highlight("Next steps:"))
+	fmt.Println(ui.Faint("  1.") + " Configure registry:  Edit .claude-tools-config.yaml and add your registry URL")
+	fmt.Println(ui.Faint("  2.") + " Create a new tool:   cntm create")
+	fmt.Println(ui.Faint("  3.") + " Search for tools:    cntm search <query>")
+	fmt.Println(ui.Faint("  4.") + " Install a tool:      cntm install <tool-name>")
+	fmt.Println()
 
 	return nil
 }

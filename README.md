@@ -69,6 +69,9 @@ go build -o cntm
 # Initialize project
 cntm init
 
+# Create a new tool (agent, command, or skill)
+cntm create
+
 # Search for tools
 cntm search "code review"
 
@@ -110,12 +113,23 @@ Project-level config overrides global config.
 
 ## Commands
 
-- `cntm init` - Initialize .claude directory
-- `cntm search <query>` - Search for tools
-- `cntm install <name>` - Install a tool
-- `cntm update --all` - Update all tools
-- `cntm publish <name>` - Publish your tool
-- `cntm remove <name>` - Remove a tool
+### Project Setup
+- `cntm init` - Initialize .claude directory structure
+
+### Tool Creation
+- `cntm create` - Create a new tool (interactive)
+- `cntm create --type agent --name "My Agent"` - Create an agent
+- `cntm create --type command --name "My Command"` - Create a command
+- `cntm create --type skill --name "My Skill"` - Create a skill
+
+### Tool Management
+- `cntm search <query>` - Search for tools in registry
+- `cntm install <name>` - Install a tool from registry
+- `cntm update --all` - Update all installed tools
+- `cntm remove <name>` - Remove an installed tool
+
+### Publishing
+- `cntm publish <name>` - Publish your tool to registry
 
 ## Directory Structure
 
