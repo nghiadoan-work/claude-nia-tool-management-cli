@@ -64,7 +64,7 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	if createType == "" && createName == "" {
 		fmt.Println()
 		fmt.Println(ui.Highlight("Create a new Claude Code tool"))
-		fmt.Println(ui.Faint("Use arrow keys to navigate, Enter to select, Esc to cancel"))
+		fmt.Println(ui.Faint("Use arrow keys to navigate, Enter to select, Ctrl+C to cancel"))
 		fmt.Println()
 	}
 

@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 
+	"github.com/manifoldco/promptui"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/config"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/services"
@@ -306,7 +308,13 @@ func runUpdateInteractive(updater *services.UpdaterService) error {
 	// Let user select
 	selectedIdx, err := ui.SelectWithArrows("Select what to update", options)
 	if err != nil {
-		return fmt.Errorf("selection cancelled")
+		// Check if it's a cancellation (Ctrl+C or Ctrl+D)
+		if errors.Is(err, promptui.ErrInterrupt) || errors.Is(err, promptui.ErrEOF) {
+			fmt.Println()
+			fmt.Println(ui.Warning("✗ Update cancelled"))
+			return nil
+		}
+		return fmt.Errorf("selection failed: %w", err)
 	}
 
 	fmt.Println()

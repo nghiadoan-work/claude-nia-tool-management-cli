@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/manifoldco/promptui"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/config"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/services"
@@ -126,6 +128,12 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		// Interactive mode
 		toolSpec, err := selectToolInteractivelyForInstall(registryService)
 		if err != nil {
+			// Check if it's a cancellation (Ctrl+C or Ctrl+D)
+			if errors.Is(err, promptui.ErrInterrupt) || errors.Is(err, promptui.ErrEOF) {
+				fmt.Println()
+				fmt.Println(ui.Warning("✗ Installation cancelled"))
+				return nil
+			}
 			return fmt.Errorf("interactive selection failed: %w", err)
 		}
 		toolsToInstall = append(toolsToInstall, *toolSpec)
@@ -254,7 +262,7 @@ func selectToolInteractivelyForInstall(registryService *services.RegistryService
 
 	typeIdx, err := ui.SelectWithArrows("Select tool type", typeOptions)
 	if err != nil {
-		return nil, fmt.Errorf("type selection cancelled")
+		return nil, err  // Return original error to preserve error type
 	}
 
 	var toolType string
@@ -294,7 +302,7 @@ func selectToolInteractivelyForInstall(registryService *services.RegistryService
 
 	toolIdx, err := ui.SelectWithArrows(fmt.Sprintf("Select %s to install", toolType), toolOptions)
 	if err != nil {
-		return nil, fmt.Errorf("tool selection cancelled")
+		return nil, err  // Return original error to preserve error type
 	}
 
 	selectedTool := tools[toolIdx]
@@ -323,7 +331,7 @@ func selectToolInteractivelyForInstall(registryService *services.RegistryService
 
 	versionIdx, err := ui.SelectWithArrows("Select version to install", cleanVersionOptions)
 	if err != nil {
-		return nil, fmt.Errorf("version selection cancelled")
+		return nil, err  // Return original error to preserve error type
 	}
 
 	var selectedVersion string

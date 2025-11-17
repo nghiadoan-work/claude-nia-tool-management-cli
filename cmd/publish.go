@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/manifoldco/promptui"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/config"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/data"
 	"github.com/nghiadoan-work/claude-nia-tool-management-cli/internal/services"
@@ -80,6 +82,12 @@ func runPublish(cmd *cobra.Command, args []string) error {
 		// Let user select a tool
 		selectedTool, err := selectToolInteractively(tools)
 		if err != nil {
+			// Check if it's a cancellation (Ctrl+C or Ctrl+D)
+			if errors.Is(err, promptui.ErrInterrupt) || errors.Is(err, promptui.ErrEOF) {
+				fmt.Println()
+				fmt.Println(ui.Warning("✗ Publication cancelled"))
+				return nil
+			}
 			return err
 		}
 
@@ -421,7 +429,7 @@ func selectToolInteractively(tools []toolInfo) (*toolInfo, error) {
 
 	typeIdx, err := ui.SelectWithArrows("Select tool type", typeOptions)
 	if err != nil {
-		return nil, fmt.Errorf("type selection cancelled")
+		return nil, err  // Return original error to preserve error type
 	}
 
 	var selectedType models.ToolType
@@ -457,7 +465,7 @@ func selectToolInteractively(tools []toolInfo) (*toolInfo, error) {
 
 	selectedIdx, err := ui.SelectWithArrows(fmt.Sprintf("Select %s to publish", selectedType), options)
 	if err != nil {
-		return nil, fmt.Errorf("tool selection cancelled")
+		return nil, err  // Return original error to preserve error type
 	}
 
 	return &filteredTools[selectedIdx], nil

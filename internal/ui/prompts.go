@@ -1,9 +1,7 @@
 package ui
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/manifoldco/promptui"
@@ -11,37 +9,44 @@ import (
 
 // Confirm prompts the user for yes/no confirmation
 // Returns true if user confirms, false otherwise
+// Supports ESC to cancel (returns false)
 func Confirm(message string) bool {
-	reader := bufio.NewReader(os.Stdin)
+	prompt := promptui.Prompt{
+		Label:     message,
+		IsConfirm: true,
+	}
 
-	fmt.Printf("%s %s %s ", Warning("?"), message, Faint("[y/N]"))
-
-	response, err := reader.ReadString('\n')
+	result, err := prompt.Run()
 	if err != nil {
+		// User pressed ESC or Ctrl+C
 		return false
 	}
 
-	response = strings.TrimSpace(strings.ToLower(response))
+	response := strings.TrimSpace(strings.ToLower(result))
 	return response == "y" || response == "yes"
 }
 
 // ConfirmWithDefault prompts the user for yes/no confirmation with a default value
+// Supports ESC to cancel (returns the default value)
 func ConfirmWithDefault(message string, defaultYes bool) bool {
-	reader := bufio.NewReader(os.Stdin)
-
-	prompt := "[y/N]"
+	defaultStr := "N"
 	if defaultYes {
-		prompt = "[Y/n]"
+		defaultStr = "Y"
 	}
 
-	fmt.Printf("%s %s %s ", Warning("?"), message, Faint(prompt))
+	prompt := promptui.Prompt{
+		Label:     message,
+		IsConfirm: true,
+		Default:   defaultStr,
+	}
 
-	response, err := reader.ReadString('\n')
+	result, err := prompt.Run()
 	if err != nil {
+		// User pressed ESC or Ctrl+C, return default
 		return defaultYes
 	}
 
-	response = strings.TrimSpace(strings.ToLower(response))
+	response := strings.TrimSpace(strings.ToLower(result))
 
 	// If empty, return default
 	if response == "" {
@@ -52,31 +57,36 @@ func ConfirmWithDefault(message string, defaultYes bool) bool {
 }
 
 // Prompt prompts the user for input with a message
+// Supports ESC to cancel (returns empty string)
 func Prompt(message string) string {
-	reader := bufio.NewReader(os.Stdin)
+	prompt := promptui.Prompt{
+		Label: message,
+	}
 
-	fmt.Printf("%s %s ", Info("?"), message)
-
-	response, err := reader.ReadString('\n')
+	result, err := prompt.Run()
 	if err != nil {
+		// User pressed ESC or Ctrl+C
 		return ""
 	}
 
-	return strings.TrimSpace(response)
+	return strings.TrimSpace(result)
 }
 
 // PromptWithDefault prompts the user for input with a default value
+// Supports ESC to cancel (returns the default value)
 func PromptWithDefault(message, defaultValue string) string {
-	reader := bufio.NewReader(os.Stdin)
+	prompt := promptui.Prompt{
+		Label:   message,
+		Default: defaultValue,
+	}
 
-	fmt.Printf("%s %s %s ", Info("?"), message, Faint(fmt.Sprintf("[%s]", defaultValue)))
-
-	response, err := reader.ReadString('\n')
+	result, err := prompt.Run()
 	if err != nil {
+		// User pressed ESC or Ctrl+C, return default
 		return defaultValue
 	}
 
-	response = strings.TrimSpace(response)
+	response := strings.TrimSpace(result)
 	if response == "" {
 		return defaultValue
 	}
@@ -84,32 +94,27 @@ func PromptWithDefault(message, defaultValue string) string {
 	return response
 }
 
-// Select prompts the user to select from a list of options
+// Select prompts the user to select from a list of options using arrow keys
+// Supports ESC to cancel (returns -1, "")
 func Select(message string, options []string) (int, string) {
-	fmt.Printf("%s %s\n", Info("?"), message)
-
-	for i, option := range options {
-		fmt.Printf("  %s %s\n", Faint(fmt.Sprintf("%d)", i+1)), option)
+	prompt := promptui.Select{
+		Label: message,
+		Items: options,
+		Templates: &promptui.SelectTemplates{
+			Label:    "{{ . | cyan }}",
+			Active:   "▸ {{ . | green }}",
+			Inactive: "  {{ . }}",
+			Selected: "{{ \"✓\" | green }} {{ . }}",
+		},
 	}
 
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print(Faint("Select: "))
-
-	response, err := reader.ReadString('\n')
+	index, _, err := prompt.Run()
 	if err != nil {
+		// User pressed ESC or Ctrl+C
 		return -1, ""
 	}
 
-	response = strings.TrimSpace(response)
-
-	// Try to parse as number
-	var selected int
-	_, err = fmt.Sscanf(response, "%d", &selected)
-	if err != nil || selected < 1 || selected > len(options) {
-		return -1, ""
-	}
-
-	return selected - 1, options[selected-1]
+	return index, options[index]
 }
 
 // ConfirmBulkOperation prompts the user to confirm a bulk operation
